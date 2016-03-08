@@ -1,0 +1,3 @@
+- name: ci
+  service: docAPI
+  command: gradle build
