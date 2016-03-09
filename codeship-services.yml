@@ -23,4 +23,4 @@ RUN gradle assemble
 
 - name: ci
   service: docAPI
-  command: gradle build
+  command: gradle war
