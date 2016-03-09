@@ -3,6 +3,6 @@
 # docAPI
 Document API 
 
-### build
-
-gradle war
+### How to start
+1. Installing Gradle[https://docs.gradle.org/current/userguide/installation.html]
+2. In project floder run <code>gradle war<code>
