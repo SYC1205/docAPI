@@ -18,6 +18,3 @@ RUN ./gradlew
 
 # Run gradle assemble to install dependencies before adding the whole repository
 RUN gradle assemble
-
-# Run gradle war
-RUN gradle war
