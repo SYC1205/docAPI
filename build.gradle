@@ -9,7 +9,7 @@ task wrapper(type: Wrapper) {
     gradleVersion = '2.11'
 }
 
-task copy{
+task copytoroot{
     println "Copy from ${buildDir}\\libs into ${projectDir}"
     copy{
       from "${buildDir}\\libs"
