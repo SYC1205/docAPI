@@ -9,6 +9,26 @@ task wrapper(type: Wrapper) {
     gradleVersion = '2.11'
 }
 
+task cleanbuildandsource {
+    println "Copy from ${buildDir}\\libs into ${projectDir}"
+    copy{
+      from "${buildDir}\\libs"
+      into "${projectDir}"
+      include '*.war'
+    }
+
+    delete fileTree(dir: ".git")
+    delete fileTree(dir: ".gradle")
+    delete fileTree(dir: ".build")
+    delete(.gitignore)
+    delete(build.gradle)
+    delete(codeship-services.yml)
+    delete(gradlew)
+    delete(gradlew.bat)
+    delete(README.md)
+
+}
+
 jar {
     manifest {
         attributes 'Implementation-Title': 'Gradle Quickstart', 'Implementation-Version': version
