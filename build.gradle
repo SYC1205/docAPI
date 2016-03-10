@@ -10,9 +10,9 @@ task wrapper(type: Wrapper) {
 }
 
 task copytoroot{
-    println "Copy from ${buildDir}\\libs into ${projectDir}"
+    println "Copy from ${buildDir}/libs into ${projectDir}"
     copy{
-      from "${buildDir}\\libs"
+      from "${buildDir}/libs"
       into "${projectDir}"
       include '*.war'
     }
