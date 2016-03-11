@@ -18,3 +18,9 @@ RUN ./gradlew
 
 # Run gradle assemble to install dependencies before adding the whole repository
 RUN gradle assemble
+
+#ADD . ./
+
+- name: ci
+  service: docAPI
+  command: gradle build

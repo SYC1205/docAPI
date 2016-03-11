@@ -5,12 +5,11 @@
 		 xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" 
 		 xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" 
 		 id="WebApp_ID" version="3.0">
-	
+
 	<context-param>
     	<param-name>contextConfigLocation</param-name>
     	<param-value>classpath:applicationContext.xml</param-value>
   	</context-param>
-	
 	<servlet>
 		<display-name>CXFNonSpringJaxrsServlet</display-name>
 		<servlet-name>CXFNonSpringJaxrsServlet</servlet-name>
@@ -18,23 +17,29 @@
 		
 		<init-param>
 			<param-name>jaxrs.serviceClasses</param-name>
-			<param-value>com.e104.restapi.docAPI</param-value>
+			<param-value>com.e104.restapi.model.docAPIImp</param-value>
 		</init-param>
 		
 		<init-param>
 			<param-name>jaxrs.address</param-name>
 			<param-value>/rest</param-value>
 		</init-param>
-		
+		<init-param>
+			<param-name>jaxrs.providers</param-name>
+			<param-value>
+			    com.e104.ErrorHandling.DocErrorHandler,
+			    com.e104.ErrorHandling.ServerExceptionMapper,
+			    com.e104.ErrorHandling.ClientExceptionMapper
+			</param-value>
+		</init-param>
+
 		<init-param>
             <param-name>jaxrs.features</param-name>
             <param-value>org.apache.cxf.jaxrs.swagger.Swagger2Feature</param-value>
         </init-param>
         
 		<load-on-startup>1</load-on-startup>
-		
 	</servlet>
-	
     <servlet-mapping>
         <servlet-name>CXFNonSpringJaxrsServlet</servlet-name>
         <url-pattern>/*</url-pattern>
