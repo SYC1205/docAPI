@@ -14,16 +14,22 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiParam;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-
+@Api(value = "/")
 public class docAPI {
+	
 	@GET
 	@Path("/getFileUrl/{parmeterString}")
-	@ApiOperation(value = "Get user details")
-	public String Getfile(@PathParam("parmeterString") String parmeterString){
+	@ApiOperation(
+			value = "Get operation with Response and @Default value", 
+		    notes = "Get operation with Response and @Default value", 
+		    response = String.class, 
+		    responseContainer = "List"
+	)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Invalid username/password supplied") })
+	public String Getfile( @ApiParam(value = "Created user object", required = true) @PathParam("parmeterString") String parmeterString){
 		return parmeterString;
 	}
 }
