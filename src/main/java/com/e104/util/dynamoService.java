@@ -2,6 +2,9 @@ package com.e104.util;
 
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -9,23 +12,41 @@ import org.json.JSONObject;
 
 
 
-import com.amazonaws.auth.BasicAWSCredentials;
+
+
+
+
+
+
+
+
+
+
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.e104.ErrorHandling.DocApplicationException;
 
 
 
-public class dynamoService {
+public class DynamoService {
 	
-	public static DynamoDB dynamoinit(){
-		BasicAWSCredentials myCredentials = new BasicAWSCredentials("AKIAJXGZ6BOIVQHUNNAQ", "9w21SKeTGh5NAiLsrditOv2qQKdN8lFKs9aZKU36");
-		
+	public static DynamoDB  dynamoinit(){
+
 		DynamoDB dynamoDB = new DynamoDB((AmazonDynamoDB) new AmazonDynamoDBClient(
-				myCredentials).withRegion(Regions.AP_NORTHEAST_1)
+				new ProfileCredentialsProvider()).withRegion(Regions.AP_NORTHEAST_1)
 			    .withEndpoint("dynamodb.ap-northeast-1.amazonaws.com"));
+			    
+			    
+		
 		return dynamoDB;
 	}
 	
@@ -76,11 +97,50 @@ public String dynamoGetItems(String tableName,JSONArray fileIds){
 	}
 	
 
+public String GetItemRequest(String fileid,int isp){
+	DynamoDB  dynamoDB = dynamoinit();
+	
+     // item.put("fileid", new AttributeValue(fileid));
+      //item.put("fileid", new AttributeValue("906eb1c4667544219607c522fe5332e811"));
+      //item.put("convert", new AttributeValue("success"));
+      //Map<String, AttributeValue> item1 = new HashMap<String, AttributeValue>();
+      //item.put("convert", new AttributeValue("success"));
+      //item.put("isP", new AttributeValue(Integer.toString(isp)));
+
+		//Map<String, String> item = new HashMap<String, String>();
+		
+		//item.put("isP", String.valueOf(isp));
+		
+     // GetItemSpec spec = new GetItemSpec().withPrimaryKey("fileid",fileid).withNameMap(item);
+		//GetItemRequest getItemRequest = new GetItemRequest().withTableName("users").withKey(item);
+				//.withExpressionAttributeNames(expressionAttributeNames);
+	//	 System.out.println(dynamoDB.geti.getItem(getItemRequest));
+		
+     // System.out.println(dynamoDB.getTable("users").getItem("fileid","1e411903e05b4456bcfe01c7288dcde511")
+    		//  .a);
+      
+      //GetItemResult item = dynamoDBClient.getItem(getItemRequest);
+      return "";
+}
+
+	public void putItem(String tableName, Item putItem){
+		DynamoDB dynamoDB = dynamoinit();
+		/*AmazonDynamoDBClient dynamoDB = new AmazonDynamoDBClient(
+				new ProfileCredentialsProvider()).withRegion(Regions.AP_NORTHEAST_1)
+			    .withEndpoint("dynamodb.ap-northeast-1.amazonaws.com");
+		*/
+		System.out.println(dynamoDB.getTable(tableName).putItem(putItem).getPutItemResult());
+		
+		
+	} 
+
 	public static void main(String args[]) {
-		dynamoService dynamoService = new dynamoService();
+		System.out.println("Start");
+		DynamoService dynamoService = new DynamoService();
 		JSONArray userData = new JSONArray();
-		userData.put(new JSONObject("{\"fileid\":\"1e411903e05b4456bcfe01c7288dcde511\"},{\"fileid\":\"906eb1c4667544219607c522fe5332e811\"}"));
-		System.out.println(dynamoService.dynamoGetItems("users",userData));
+		//userData.put(new JSONObject("{\"fileid\":\"1e411903e05b4456bcfe01c7288dcde511\"},{\"fileid\":\"906eb1c4667544219607c522fe5332e811\"}"));
+		//System.out.println(dynamoService.dynamoGetItems("users",userData));
+		dynamoService.GetItemRequest("1e411903e05b4456bcfe01c7288dcde511", 1);
 		}
 	
 }

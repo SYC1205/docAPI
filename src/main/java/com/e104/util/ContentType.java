@@ -1,4 +1,4 @@
-package com.e104.enums;
+package com.e104.util;
 
 /**
  * 設定ContentType..寫死..

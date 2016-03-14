@@ -3,6 +3,8 @@ package com.e104.restapi.model;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,6 +16,8 @@ import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
 
+import javassist.bytecode.analysis.ControlFlow.Catcher;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -23,14 +27,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.services.dynamodbv2.document.Item;
 import com.e104.ErrorHandling.DocApplicationException;
 import com.e104.restapi.docAPI;
-import com.e104.util.dynamoService;
+import com.e104.util.ContentType;
+import com.e104.util.DynamoService;
 import com.e104.util.tools;
 
 public class docAPIImp implements docAPI{
 	private static transient Logger Logger = org.apache.log4j.Logger.getLogger(docAPIImp.class);
-	String bucketName = "e104-doc-api-file-store";
+	String bucketName = "e104-filetemp";
 	String objectKey = "123/456/test.txt";
 	tools tools = new tools();
 	@Override
@@ -149,9 +156,28 @@ public class docAPIImp implements docAPI{
 	}
 
 	@Override
-	public String putFile(String Param) {
-		// TODO Auto-generated method stub
-		return null;
+	public String putFile(String jsonData) throws DocApplicationException{
+		
+			JSONObject returnObject = new JSONObject();
+			JSONObject paramObj;
+			try {
+			//paramVal is {"apnum":"10400","pid":"10400","content-type":"image/jpeg","filename":"123.jpg","jsonObj":{"ectraNo":"111-222-333"},"isP":1}
+			paramObj = new JSONObject(this.decryptParam(jsonData));
+			
+			//確認必填欄位
+			if (!paramObj.has("apnum")||"".equals(paramObj.getString("apnum")) ||
+				!paramObj.has("pid")||"".equals(paramObj.getString("pid")) ||
+				!paramObj.has("Content_Disposition")||"".equals(paramObj.getString("Content_Disposition")) ||
+			    !paramObj.has("jsonObj")||"".equals(paramObj.getJSONObject("jsonObj")) ||
+			    !paramObj.has("isP")||"".equals(paramObj.getInt("isP")) ||
+			    !paramObj.has("content-type")||"".equals(paramObj.getString("content-type")))
+				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
+
+			}catch(JSONException e){
+				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
+			}
+			
+			return null;
 	}
 
 	@Override
@@ -216,7 +242,7 @@ public class docAPIImp implements docAPI{
 			tools tools = new tools();
 			String jsonObject = tools.decode(Object);
 			
-			dynamoService dynamoService = new dynamoService();
+			DynamoService dynamoService = new DynamoService();
 			JSONObject jsonObj = new JSONObject(jsonObject);
 			String returnStr ="";
 			System.out.println("ok"+jsonObj.getJSONArray("getFileArr").toString());
@@ -483,7 +509,7 @@ public class docAPIImp implements docAPI{
 		}
 
 		@Override
-		public String signature(String param) throws DocApplicationException {
+		public String signatureByExtraNo(String param) throws DocApplicationException {
 			//SimpleDateFormat sdf = new SimpleDateFormat("E yyyy-MM-dd");
 			JSONObject returnObject = new JSONObject();
 			JSONObject paramObj;
@@ -491,33 +517,77 @@ public class docAPIImp implements docAPI{
 			//paramVal is {"apnum":"10400","pid":"10400","content-type","image/jpeg","filename":"123","extra":"1234"}
 			paramObj = new JSONObject(this.decryptParam(param));
 			
+			//mongoDb data check
 			if (!paramObj.has("apnum")||"".equals(paramObj.getString("apnum")))
 				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
 			if (!paramObj.has("pid")||"".equals(paramObj.getString("pid")))
 				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
+			if (!paramObj.has("Content_Disposition")||"".equals(paramObj.getString("Content_Disposition")))
+				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
+			if (!paramObj.has("extra")||"".equals(paramObj.getString("extra")))
+				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
+			if (!paramObj.has("isP")||"".equals(paramObj.getInt("isP")))
+				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
+			
+			//singedurl
 			if (!paramObj.has("content-type")||"".equals(paramObj.getString("content-type")))
 				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
-			if (!paramObj.has("filename")||"".equals(paramObj.getString("filename")))
-				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
-			if (!paramObj.has("extraNo")||"".equals(paramObj.getString("extraNo")))
-				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
 			
 			
-				
-			 String s = UUID.randomUUID().toString();
-			 String objectKey ="filetemp/"+s.substring(0,8)+s.substring(9,13)+s.substring(14,18)+s.substring(19,23)+s.substring(24)+".jpg"; 
-		     //去掉“-”符号 
+			
+			
+			//userConfig Data query
+			DynamoService dynamoService = new DynamoService();
+			//獲取型態類別
+			int contentType = tools.getContentType(paramObj.getString("content-type"));
+			String fileid = tools.generateFileId(contentType,paramObj.getInt("isP"));
+			//filePath
+			String filepath = tools.generateFilePath(fileid);
+			//fileName
+			String fileName = paramObj.getString("Content_Disposition");
+			
+			//Db內串出filepath&fileName
+			String filepath_forS3 = filepath + fileid + fileName.substring(fileName.lastIndexOf("."),fileName.length()).toLowerCase();
+			
+			Item putItem = new Item().withPrimaryKey("fileid",fileid).
+			withString("apnum", paramObj.getString("apnum")).
+			withNumber("contenttype", contentType).
+			withString("convert", "pending").
+			withString("fileid",fileid).
+			withString("filename", fileName).
+			withString("filepath", filepath_forS3).
+			withString("imgstatus", "pending").
+			withString("insertdate", new SimpleDateFormat().format(new java.util.Date())).
+			withNumber("isP",paramObj.getInt("isP")).
+			withString("pid", paramObj.getString("pid")).
+			
+		
+			//非必填項目
+			withString("source", "http://localhost:8080/DreamsAdmin/Dream/DreamFwdAction_activityBroadcasting.action?dreamType=2").
+			withString("description", "description").
+			withString("title", "title");
+			
+			/*if(contentType == ContentType.Video || contentType == ContentType.WbVideo)
+				putItem.withString("videoQuality", videoQualityObj);
+			
+			*/
+			
+			dynamoService.putItem("users", putItem);
+			
+			 //去掉“-”符号 
 			String policy_document =
 				      "{\"expiration\": \"2017-01-01T00:00:00Z\"," +
 				        "\"conditions\": [" +
 				          "{\"bucket\": \""+bucketName+"\"}," +
-				          "[\"starts-with\", \"$key\", \""+objectKey+"\"]," +
+				          "[\"starts-with\", \"$key\", \""+filepath_forS3+"\"]," +
 				          "{\"acl\": \"public-read\"}," +
-				          "{\"Content-Disposition\": \""+ paramObj.has("filename") +"},"+
+				          "{\"Content-Disposition\": \""+ paramObj.getString("Content_Disposition") +"\"},"+
 				          "{\"acl\": \"public-read\"},"+
-				          "[\"starts-with\", \"$Content-Type\", \"image/\"]," +
+				          "[\"starts-with\", \"$Content-Type\", \""+ paramObj.getString("content-type") +"\"]" +
 				        "]" +
 				      "}";
+			
+			//"[\"starts-with\", \"$Content-Type\", \"image/\"]," +
 			
 			 // Calculate policy and signature values from the given policy document and AWS credentials.
 			Base64 Base64 =  new Base64();
@@ -529,16 +599,16 @@ public class docAPIImp implements docAPI{
 			
 				Mac hmac = Mac.getInstance("HmacSHA1");
 				
-					hmac.init(new SecretKeySpec("9w21SKeTGh5NAiLsrditOv2qQKdN8lFKs9aZKU36".getBytes("UTF-8"), "HmacSHA1"));
+					hmac.init(new SecretKeySpec(new ProfileCredentialsProvider().getCredentials().getAWSSecretKey().getBytes("UTF-8"), "HmacSHA1"));
 				
 				//Map<String, String> cachedUrlMap = new HashMap<String, String>();	
 				
 				signature = Base64.encodeToString(hmac.doFinal(policy.getBytes("UTF-8"))).replaceAll("\n", "");
 				returnObject.put("policy_document", policy);
 				returnObject.put("signature", signature);
-				returnObject.put("objectKey", objectKey);
+				returnObject.put("objectKey", filepath_forS3);
 				returnObject.put("bucketName", bucketName);
-				returnObject.put("Content-Disposition", paramObj.has("filename"));
+				returnObject.put("Content_Disposition", paramObj.getString("Content_Disposition"));
 			
 			} catch (InvalidKeyException | UnsupportedEncodingException |
 					NoSuchAlgorithmException | NullPointerException | JSONException e) {
@@ -549,4 +619,5 @@ public class docAPIImp implements docAPI{
 			return returnObject.toString();
 		}
 
+		
 }

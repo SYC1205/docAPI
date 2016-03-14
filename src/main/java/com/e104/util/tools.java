@@ -4,8 +4,13 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import net.spy.memcached.MemcachedClient;
+
+
+
+
 
 //import org.apache.catalina.util.Base64;
 import org.apache.commons.codec.binary.Base64;
@@ -15,8 +20,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-import com.e104.enums.ContentType;
+
+
+
+
 import com.e104.enums.Protocol;
+import com.e104.util.ContentType;
 
 public class tools {
 	private static transient Logger Logger = org.apache.log4j.Logger.getLogger(tools.class);
@@ -691,4 +700,56 @@ public JSONObject resolveSingleFileUrl(String fileId, JSONObject obj, JSONObject
 		}catch(Exception e){}
 		return filepath;
 	}
+	
+	//checkContentType
+	public int getContentType(String ContentTypeString){
+		//待續，需補寫其他型態
+		switch (ContentTypeString.toLowerCase()) {
+		case "image/jpeg":
+			return ContentType.Image;
+			
+
+		default:
+			return ContentType.Image;
+		}
+		
+	}
+	/**
+	 * @method generateFileId
+	 * @param contenttype
+	 * @param isP
+	 * @return String
+	 * @history 1:modify by JasonHsiao on 2013-09-14
+	 * 				A:新增參數isP=>0非公開1公開
+	 * 				B:依照isP值修改s_contenttype第一碼
+	 */
+	public String generateFileId(int contenttype,int isP){
+		String s_contenttype = String.valueOf(contenttype);
+		if(s_contenttype.length() == 1) {
+			if(isP == 1){
+				//公開
+				s_contenttype = "1" + s_contenttype;
+			}else{
+				//非公開
+				s_contenttype = "0" + s_contenttype;
+			}
+		}
+		return UUID.randomUUID().toString().replaceAll("-", "")+s_contenttype;
+	}
+	
+	public String generateFilePath(String fid){
+		String returnPath = "";
+		try{
+			fid = this.md5(fid);
+			String layer1 = fid.substring(0,3);
+			String layer2 = fid.substring(3,6);
+			String layer3 = fid.substring(6,9);
+			returnPath = Config.ROOT_PATH + "/" + layer1 + "/" + layer2 + "/" + layer3 + "/";
+		
+			//File directory = new File(returnPath);
+			//directory.mkdirs();
+		}catch(Exception e){}
+		return returnPath;
+	}
+	
 }

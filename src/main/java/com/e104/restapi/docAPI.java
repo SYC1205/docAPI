@@ -163,7 +163,10 @@ public interface docAPI {
 	   @Path("/putFile")
 	   @ApiOperation(value = "putfile ", httpMethod = "POST")
 	   @ApiResponses(value = { @ApiResponse(code = 200, message = "http/1.1 200 OK{\"error\":\"\",\"data\":\"\",\"success\":\"true\"}")})
-	   public String putFile(@ApiParam(value = "{pid,contentType,fileName,filePath,title,description,apnum,jsonObj}", required = true) @PathParam("Param") String Param);
+	   public String putFile(@ApiParam(value = "{\"apnum\":\"10400\","
+	   		+ "\"pid\":\"10400\",\"content-type\":\"image/jpeg\","
+	   		+ "\"filename\":\"123.jpg\","
+	   		+ "\"jsonObj\":{\"ectraNo\":\"111-222-333\"},\"isP\":1}", required = true) @PathParam("jsonData") String jsonData) throws DocApplicationException;
 	   
 	   @DELETE
 	   @Path("/removeKey")
@@ -222,9 +225,9 @@ public interface docAPI {
 	   
 	   
 	   @GET
-	   @Path("/signature/{param}")
+	   @Path("/signatureByExtraNo/{param}")
 	   @ApiOperation(value = "parme is {\"apnum\":\"10400\",\"pid\":\"10400\",\"content-type\",\"image/jpeg\",\"filename\":\"123\",\"extra\":\"1234\"}")
-	   public String signature(@ApiParam(value = "Param is decode,need jsonObj & timestamp", required = true) @PathParam("param") String param) throws DocApplicationException; 
+	   public String signatureByExtraNo(@ApiParam(value = "Param is decode,need jsonObj & timestamp", required = true) @PathParam("param") String param) throws DocApplicationException; 
 	   
 	 //doing##########################################################
 	   

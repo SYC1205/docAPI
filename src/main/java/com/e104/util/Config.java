@@ -55,7 +55,7 @@ public abstract class Config {
 	//public static final String CONVERT_COMMAND = "C:\\Program Files\\ImageMagick-6.8.8-Q8\\convert.exe";
 	
 	//設定104plus rootPath
-	public static final String ROOT_PATH = "/mnt/mfs/stream/104plus";
+	public static final String ROOT_PATH = "filetemp";
 	
 	//設定root位置(吐資料時只需要/104plus/以後
 	public static final String ROOT = "/mnt/mfs/stream";	
