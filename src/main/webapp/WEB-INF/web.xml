@@ -9,7 +9,7 @@
 	<context-param>
     	<param-name>contextConfigLocation</param-name>
     	<param-value>classpath:applicationContext.xml</param-value>
-  	</context-param>
+  	</context-param> 
 	
 	<servlet>
 		<display-name>CXFNonSpringJaxrsServlet</display-name>
@@ -30,6 +30,13 @@
             <param-name>jaxrs.features</param-name>
             <param-value>org.apache.cxf.jaxrs.swagger.Swagger2Feature</param-value>
         </init-param>
+		
+		<init-param>
+			<param-name>static-resources-list</param-name>
+			<param-value>
+				/swagger.json 
+			</param-value>
+		</init-param>
         
 		<load-on-startup>1</load-on-startup>
 		
@@ -39,5 +46,6 @@
         <servlet-name>CXFNonSpringJaxrsServlet</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
+    
     
 </web-app>
