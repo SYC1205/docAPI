@@ -8,11 +8,11 @@ hooks:
     - location: Scripts/UnzipDataBundle.sh
   AfterInstall:
     - location: Scripts/RunResourceTests.sh
-      timeout: 180
+      timeout: 10
   ApplicationStart:
     - location: Scripts/RunFunctionalTests.sh
-      timeout: 3600
+      timeout: 10
   ValidateService:
     - location: Scripts/MonitorService.sh
-      timeout: 3600
+      timeout: 10
       runas: codedeployuser
