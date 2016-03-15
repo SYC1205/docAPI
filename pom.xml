@@ -22,6 +22,8 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
+			
+			<!-- This plugin is for auto gen swagger.json -->
 			<plugin>
 		        <groupId>com.github.kongchen</groupId>
 		        <artifactId>swagger-maven-plugin</artifactId>
