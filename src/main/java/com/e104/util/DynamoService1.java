@@ -23,8 +23,6 @@ import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.e104.ErrorHandling.DocApplicationException;
 
-
-
 public class DynamoService {
 	
 	public static DynamoDB  dynamoinit(){
