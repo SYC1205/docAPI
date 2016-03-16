@@ -5,7 +5,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
+import org.apache.logging.log4j.*;
 import net.spy.memcached.MemcachedClient;
 
 
@@ -14,7 +14,9 @@ import net.spy.memcached.MemcachedClient;
 
 //import org.apache.catalina.util.Base64;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
+
+
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,10 +27,11 @@ import org.json.JSONObject;
 
 
 import com.e104.enums.Protocol;
+import com.e104.restapi.model.docAPIImp;
 import com.e104.util.ContentType;
 
 public class tools {
-	private static transient Logger Logger = org.apache.log4j.Logger.getLogger(tools.class);
+	private final Logger Logger = LogManager.getLogger(tools.class);
 	public boolean isEmpty(String str){
     	return str == null || str.trim().equals("");
     }

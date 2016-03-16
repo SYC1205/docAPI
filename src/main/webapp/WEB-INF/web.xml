@@ -10,6 +10,7 @@
     	<param-name>contextConfigLocation</param-name>
     	<param-value>classpath:applicationContext.xml</param-value>
   	</context-param>
+
 	<servlet>
 		<display-name>CXFNonSpringJaxrsServlet</display-name>
 		<servlet-name>CXFNonSpringJaxrsServlet</servlet-name>
@@ -20,10 +21,13 @@
 			<param-value>com.e104.restapi.model.docAPIImp</param-value>
 		</init-param>
 		
+		<!-- CXFNonSpringJaxrsServlet default path, dont't change -->
 		<init-param>
 			<param-name>jaxrs.address</param-name>
 			<param-value>/rest</param-value>
 		</init-param>
+
+		<!-- DocErrorHandlere -->
 		<init-param>
 			<param-name>jaxrs.providers</param-name>
 			<param-value>
@@ -32,11 +36,20 @@
 			    com.e104.ErrorHandling.ClientExceptionMapper
 			</param-value>
 		</init-param>
-
+	
+		<!-- default swagger.json no use -->
 		<init-param>
             <param-name>jaxrs.features</param-name>
             <param-value>org.apache.cxf.jaxrs.swagger.Swagger2Feature</param-value>
         </init-param>
+		
+		<!-- static swagger.json , create by swagger-maven-plugin -->
+		<init-param>
+			<param-name>static-resources-list</param-name>
+			<param-value>
+				/swagger.json 
+			</param-value>
+		</init-param>
         
 		<load-on-startup>1</load-on-startup>
 	</servlet>
@@ -44,5 +57,6 @@
         <servlet-name>CXFNonSpringJaxrsServlet</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
+    
     
 </web-app>

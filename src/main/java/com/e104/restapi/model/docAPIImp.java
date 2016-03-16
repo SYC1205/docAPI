@@ -20,9 +20,9 @@ import javassist.bytecode.analysis.ControlFlow.Catcher;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-
+import org.apache.logging.log4j.*;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,7 +36,7 @@ import com.e104.util.DynamoService;
 import com.e104.util.tools;
 
 public class docAPIImp implements docAPI{
-	private static transient Logger Logger = org.apache.log4j.Logger.getLogger(docAPIImp.class);
+	private final Logger Logger = LogManager.getLogger(docAPIImp.class);
 	String bucketName = "e104-filetemp";
 	String objectKey = "123/456/test.txt";
 	tools tools = new tools();

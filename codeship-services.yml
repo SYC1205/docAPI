@@ -1,26 +1,15 @@
-# Starting from the Openjdk-8 container
-FROM java:openjdk-8-jdk
+# We're using the official Maven 3 container from the Dockerhub (https://hub.docker.com/_/maven/).
+# Take a look at the available versions so you can specify the Java version you want to use.
+FROM maven:3
 
-# Set the WORKDIR. All following commands will be run in this directory.
+# INSTALL any further tools you need here so they are cached in the docker build
+
 WORKDIR /app
 
-# Copying all gradle files necessary to install gradle with gradlew
-COPY gradle gradle
-COPY \
-  build.gradle \
-  gradle.properties \
-  gradlew \
-  settings.gradle \
-  ./
+# Copy the pom.xml into the container to install all dependencies
+COPY pom.xml ./
 
-# Install the gradle version used in the repository through gradlew
-RUN ./gradlew
-
-# Run gradle assemble to install dependencies before adding the whole repository
-RUN gradle assemble
-
-#ADD . ./
-
-- name: ci
-  service: docAPI
-  command: gradle build
+# Run install task so all necessary dependencies are downloaded and cached in
+# the Docker container. We're running through the whole process but disable
+# testing and make sure the command doesn't fail.
+RUN mvn install clean --fail-never -B -DfailIfNoTests=false

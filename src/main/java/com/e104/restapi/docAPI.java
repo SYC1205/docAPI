@@ -10,9 +10,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
 import com.e104.ErrorHandling.DocApplicationException;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponses;
@@ -21,6 +21,7 @@ import io.swagger.annotations.ApiResponse;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 
+@Api(value = "/")
 public interface docAPI {
 	  @PUT
 	   @Path("/addKey")
@@ -236,5 +237,4 @@ public interface docAPI {
 	   @ApiOperation(value = "Get file Url", httpMethod = "GET")
 	   @ApiResponses(value = { @ApiResponse(code = 200, message = "http/1.1 200 OK{\"error\":\"\",\"data\":\"\",\"success\":\"true\"}")})
 	   public String getFileUrlnoRedis(@ApiParam(value = "Param is decode,need jsonObj & timestamp", required = true) @PathParam("Param") String Param);
-	   
 }
