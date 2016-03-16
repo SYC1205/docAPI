@@ -1,8 +1,8 @@
 version: 0.0
 os: linux
 files:
-  - source: /
-    destination: /opt/tomcat/johnson/webapps
+  - source: /docAPI.war
+    destination: /opt/tomcat/johnson/webapps/
 hooks:
   BeforeInstall:
     - location: Scripts/copyWarToTomcat.sh
