@@ -20,15 +20,19 @@ import javassist.bytecode.analysis.ControlFlow.Catcher;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
 import org.apache.logging.log4j.*;
 import org.apache.commons.codec.binary.Base64;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.e104.restapi.dao.DynamoConvert;
+import com.e104.restapi.dao.DynamoUsers;
+import com.e104.restapi.model.ImageProcess;
+import com.e104.restapi.model.docAPIImp;
 import com.e104.ErrorHandling.DocApplicationException;
 import com.e104.restapi.docAPI;
 import com.e104.util.ContentType;
@@ -36,7 +40,7 @@ import com.e104.util.DynamoService;
 import com.e104.util.tools;
 
 public class docAPIImp implements docAPI{
-	private final Logger Logger = LogManager.getLogger(docAPIImp.class);
+	private static transient Logger Logger = LogManager.getLogger(docAPIImp.class);
 	String bucketName = "e104-filetemp";
 	String objectKey = "123/456/test.txt";
 	tools tools = new tools();
@@ -156,28 +160,401 @@ public class docAPIImp implements docAPI{
 	}
 
 	@Override
-	public String putFile(String jsonData) throws DocApplicationException{
+	public String putfile(String jsonData) throws DocApplicationException{
 		
-			JSONObject returnObject = new JSONObject();
+			JSONObject rtn = new JSONObject();
 			JSONObject paramObj;
 			try {
-			//paramVal is {"apnum":"10400","pid":"10400","content-type":"image/jpeg","filename":"123.jpg","jsonObj":{"ectraNo":"111-222-333"},"isP":1}
+			//paramVal is {"apnum":"10400","pid":"10400","content-type":"image/jpeg","Content_Disposition":"123.jpg","extra":{"ectraNo":"111-222-333"},"isP":1, "title":"測試","description":"測試"}
 			paramObj = new JSONObject(this.decryptParam(jsonData));
 			
 			//確認必填欄位
-			if (!paramObj.has("apnum")||"".equals(paramObj.getString("apnum")) ||
-				!paramObj.has("pid")||"".equals(paramObj.getString("pid")) ||
-				!paramObj.has("Content_Disposition")||"".equals(paramObj.getString("Content_Disposition")) ||
-			    !paramObj.has("jsonObj")||"".equals(paramObj.getJSONObject("jsonObj")) ||
-			    !paramObj.has("isP")||"".equals(paramObj.getInt("isP")) ||
-			    !paramObj.has("content-type")||"".equals(paramObj.getString("content-type")))
-				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
+			if (!paramObj.has("apnum") || "".equals(paramObj.getString("apnum")) ||
+				!paramObj.has("pid") || "".equals(paramObj.getInt("pid")) ||
+				!paramObj.has("Content_Disposition") || "".equals(paramObj.getString("Content_Disposition")) ||
+			    !paramObj.has("extra") || "".equals(paramObj.getJSONObject("extra")) ||
+			    !paramObj.has("isP") || "".equals(paramObj.getInt("isP")) ||
+			    !paramObj.has("content-type") || "".equals(paramObj.getString("content-type")) ||
+			    !paramObj.has("title") || "".equals(paramObj.getString("title")) ||
+			    !paramObj.has("description") || "".equals(paramObj.getString("description")))
+				throw new DocApplicationException("NotPresent",1);//erroehandler 必填欄位未填
 
+			String apNum = paramObj.getString("apnum");
+			String pid = paramObj.getString("pid");
+			String fileName = paramObj.getString("Content_Disposition");
+			int isP = paramObj.getInt("isP");
+			int contentType = tools.getContentType(paramObj.getString("content-type"));
+			JSONObject extra_json = paramObj.getJSONObject("extra");
+			String title = paramObj.getString("title");
+			String description = paramObj.getString("description");
+			
+			
+			if(extra_json.has("expireTimestamp") && extra_json.optLong("expireTimestamp") == 0)
+				throw new DocApplicationException("NotValid;expireTimestamp shoule be a long type",2);
+			
+			String extraNo = extra_json.has("extraNo") ? extra_json.getString("extraNo").trim() : "";				
+			
+			//實體檔案路
+			String txid = tools.generateTxid();
+			String status = "";
+			String filepath_forS3 ="";
+			
+			// 2014/09/26 檢查 extra 中是否有帶入 fileId, 若不存在才自行建立.
+			String fileid = null;
+			//JSONObject extraJson = new JSONObject(jsonObj);
+			if(extra_json.has("fileId")){
+				fileid = extra_json.getString("fileId");
+				Logger.info("use fileid passed from frontend => " + fileid);
+				
+				// check fileId is not in use.
+				DynamoService dynamoService = new DynamoService();
+				JSONObject user = new JSONObject( dynamoService.getItem("users", fileid));
+				
+				if(user.length()<=0){
+					Logger.info("fileid not in use, check passed.");
+				}
+				else{
+					Logger.error("provided fileid is in use. => " + fileid);
+					throw new DocApplicationException("NotValid;provided fileid is in use",2);			
+				}
+				
+			}else{
+			    fileid = tools.generateFileId(contentType,paramObj.getInt("isP"));
+				Logger.info("create new fileid => " + fileid);
+			}
+
+
+			//filePath產生檔案位置
+			String filepath = tools.generateFilePath(fileid);
+			
+			//long time1 = 0L ;
+			//NumberFormat nf = NumberFormat.getInstance();
+			//nf.setMaximumFractionDigits(5);
+			//判斷filename是否為null or 空值, 如filename有資料則進行檔案存檔
+	        if (fileName != null && !"".equals(fileName)) {
+	        	//Db內串出filepath&fileName
+				filepath_forS3 = filepath + fileid + fileName.substring(fileName.lastIndexOf("."),fileName.length()).toLowerCase();
+				status = "Success";
+	        }
+	        
+	        if(status.equals("Success")){
+	        	
+	        	String now = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
+	        	
+	        	// filepath_forMount => /104plus/xxx/xxx/xxx/fileid.ext
+	        	//String filepath_forMount = tools.generateFilePath(fileid)+fileid + fileName.substring(fileName.lastIndexOf("."),fileName.length()).toLowerCase();
+	        	//filepath_forMount = tools.generateFilePathForMount(filepath_forMount);
+	        	
+				/*
+				* 基本上, 最終轉檔狀態還是寫在 'users' collection, 此處僅是 trigger & job 在讀取的參照檔
+				* 以避免取狀態時, 要檢查兩個 collection 的效率問題.
+				* 
+				* convert item 具有 priority 是為了工作相依性, 在排序後能夠執行.
+	        	*/
+	        	// 將轉檔工作轉換成  json tasks object.
+	        	JSONObject convert = new JSONObject();
+	        	convert.put("fileid", fileid);
+	        	convert.put("contenttype", contentType);
+	        	convert.put("apnum", apNum);
+	        	convert.put("filepath", filepath_forS3); 
+	        	convert.put("insertDate", now);
+	        	convert.put("triggerDate", now);
+	        	convert.put("status", new JSONObject());		// 預先建立轉檔狀態欄位.
+	        	
+	        	JSONArray convertItems = new JSONArray();
+	        	convert.put("convertItems", convertItems);		// 預先建立轉檔項目欄位.
+	        	
+	        	
+	        	JSONObject videoQualityObj = null;
+	        	// add quality property for video type.
+	        	if(contentType == ContentType.Video || contentType == ContentType.WbVideo){
+
+	        		JSONArray videoQuality = extra_json.has("videoQuality")? extra_json.getJSONArray("videoQuality") : new JSONArray();
+	        		
+	        		Logger.info("put video and videoQuality is => " + videoQuality);
+	        		
+	        		if(videoQuality.length() == 0){
+	        			videoQuality.put("480p");
+	        			Logger.info("putFile no specify videoQuality, set default quality [480p].");
+	        		}
+	        		
+	        		videoQualityObj = new JSONObject();
+	        		
+	        		for(int i=0; i<videoQuality.length(); i++){
+	        			String quality = videoQuality.getString(i);
+	        			if(quality.equals("480p") || quality.equals("720p")){
+	        				videoQualityObj.put(quality, new JSONObject().put("status", "pending"));
+	        			}		        				
+	        		}		        
+	        		
+	        		convert.put("videoQuality", videoQualityObj);
+	        	}
+	        	
+	        	
+	        	// -- 之後若支援 multiAction 以外的轉檔類型時, 每個種類都需要加上 order, 
+	        	// -- 因 tag 有相依性, 在 job 針對 order 進行 sorting 之後才依序 convert.
+	        	
+	        	
+	        	JSONArray maArray = null;
+	        	JSONArray syncActions = new JSONArray();		// 立即轉檔的項目
+	        	JSONArray asyncActions = new JSONArray();		// 不需立即轉檔的項目
+	        	
+	        	if(extra_json.has("multiAction") && !tools.isEmpty(extra_json.getString("multiAction"))){
+	        		JSONObject maConvert = new JSONObject();
+	        		maConvert.put("itemName", "maConvert");			// itemName 用以識別轉檔項目
+	        		
+	        		//maConvert.put("priority", 60);
+	        		maArray = extra_json.getJSONArray("multiAction");
+	        		
+	        		// 若有提供 extraNo 則只保存 extraNo.
+	        		if(!tools.isEmpty(extraNo))
+	        			maConvert.put("extraNo", extraNo);
+	        		else
+	        			maConvert.put("multiAction", maArray);	        			
+        			
+        			convertItems.put(maConvert);
+        			
+	        	}		        	
+	        	
+	        	// 若上傳的檔案類型為圖片, 因支援同步、非同步轉檔參數, // --預先分析轉檔請求相依性. 
+	        	// (相依性可能因多層 parent, 分析複雜, 基於上傳效率及程式精簡, 還是要求於前期上傳時的參數就要正確設置.)
+	        	if(contentType == ContentType.Image && maArray != null){			        	
+	        		
+        			Logger.info("file is image type, start to classify sync & async multiAction..");
+        			
+		        	// 將 multi action 參數進行分類.
+		        	for(int i=0; i<maArray.length(); i++){
+		        		JSONObject action = maArray.getJSONObject(i);
+		        		// if(action.has("async") && action.get("async").toString().equals("true")){
+		        		if(action.has("async") && action.getBoolean("async")){
+		        			// 非同步不需紀錄, return 前再 trigger 轉檔即可.
+		        			asyncActions.put(action);	// 開發 debug 階段檢視資訊用, 後續可以拿掉.
+		        		}
+		        		else
+		        		{
+		        			syncActions.put(action);	// 預設均為同步
+		        		}
+		        	}
+		        	Logger.info("analize sync/async image convert type: fileid => " + fileid + ", total => " + maArray.length() + ", sync => " + syncActions.length() + ", async => " + asyncActions.length());		        				        		
+	        	}
+	        	else{
+        			Logger.info("putFile target is not type of image or without multiAction param.");
+        		}
+	        	
+	        	// String db_filepath = "";
+	        	JSONObject insert = new JSONObject();
+	    		insert.put("pid", pid);
+	    		insert.put("fileid", fileid);
+	    		insert.put("contenttype", contentType);
+	    		insert.put("filename", fileName);
+	    		//modify by JasonHsiao on 2013-07-29 , 附檔名轉小寫
+	    		//2014-01-09 fix for generateFilePath don't use parma contentType
+//	    		db_filepath = tools.generateFilePath(fileid)+fileid + fileName.substring(fileName.lastIndexOf("."),fileName.length()).toLowerCase();
+	    		insert.put("filepath", filepath_forS3);   		
+	    		insert.put("apnum", apNum);
+	    		insert.put("title", title);
+	    		insert.put("description", description);
+	    		insert.put("insertdate", now);
+	    		insert.put("imgstatus","pending");
+	    		
+	    		if(contentType == ContentType.Video || contentType == ContentType.WbVideo)
+	    			insert.put("videoQuality", videoQualityObj);
+	    		
+	    		//modify by JasonHsiao on 2013-09-09 , set default convert value to 'pending'
+	    		//modify by JJ on 2014-02-06, set image convert = success
+	    		// if ( contentType == 1) {
+	    		if ( contentType == 1 && asyncActions.length() == 0) {
+	    			insert.put("convert","success");
+	        	} else {
+	        		insert.put("convert","pending");
+	    		}
+
+	    		//modify by JasonHsiao on 2013-09-14 , add column isP => 型態int
+	    		insert.put("isP", isP);
+	    		
+	    		
+    			
+    			if(extra_json.has("source")) insert.put("source",extra_json.getString("source"));
+
+	        	//FileManageDispatch fmd = new FileManageDispatch();
+    			//String insertUsersResult = fmd.fileInsert(insert,"users");
+	        	DynamoUsers dynamoUsers = new DynamoUsers();
+    			dynamoUsers.insertDynamo(insert);
+    			
+	        	///Dynamo回傳確認
+	        	//if(!isEmpty(insertUsersResult) && insertUsersResult.equals("500"))
+	        	//	throw new Exception("ERROR FileManage putFile , " + DateUtil.getDateTimeForLog() + " , fileInsert to 'users' collection return 500 String, insertObj is=>" + insert.toString());
+				     
+    			DynamoConvert dynamoconvert = new DynamoConvert();
+    			dynamoconvert.insertDynamo(convert);
+    			//String insertConvertResult = fmd.fileInsert(convert,"convert");
+	        	//modify by JasonHsiao on 2013-06-26 for return String "500" handle
+				//if(!isEmpty(insertConvertResult) && insertConvertResult.equals("500"))
+				//	throw new Exception("ERROR FileManage putFile , " + DateUtil.getDateTimeForLog() + " , fileInsert to 'convert' collection return 500 String, insertObj is=>" + convert.toString());
+				
+				
+				Logger.info("convert info inserted.");
+	        						
+	    		//System.out.println("DEBUG FileManage putFile , " + DateUtil.getDateTimeForLog() + " , complete insert to MongoDB , insert data=>" + insert.toString() + " , extra_json=>" + extra_json.toString());
+	    		
+	    		//FileConvert fc = new FileConvert();
+	    		//TODO Johnson未來要回來加上這行，因為現在無法執行ffmpage
+				ImageProcess ir = new ImageProcess();
+	    		
+	    		//QueueService qs = new QueueService();
+		        
+		        switch(contentType){
+			       
+			        case ContentType.Doc:	//是否需要文轉檔
+			        	//modify by JasonHsiao on 2013-08-13 , change DocToPDF , pdfToImg , multiAction to queue , run in jar
+			        	if(extra_json.has("convert")&& extra_json.getString("convert").equals("true")){
+			        		
+			        		//System.out.println("DEBUG FileManage putFile , " + DateUtil.getDateTimeForLog() + " , contenttype is doc and convert is true , start execute convert fileId=>" + fileid + " , extra_json=>" + extra_json.toString());
+			        		 
+			        		//insert data to docConvert table for jar to execute docConvertToPdf,multiAction,pdfToImg
+			        		JSONObject insertDocConvert = new JSONObject();
+			        		insertDocConvert.put("txid", txid);
+			        		insertDocConvert.put("fileid", fileid);
+			        		insertDocConvert.put("filePath", filepath_forS3);
+			        		insertDocConvert.put("docToPdf", "pending");
+			        		insertDocConvert.put("doMultiAction", "pending");
+			        		insertDocConvert.put("pdfToImg", "pending");
+			        		//modify by JasonHsiao on 2013-09-03 , add doDocumentImageSize column in docConvert collection
+			        		insertDocConvert.put("doDocumentImageSize", "pending");
+//			        		insertDocConvert.put("method", "putFile");
+			        		
+			        		if(extra_json.has("pdfOnly") && extra_json.getBoolean("pdfOnly")){
+			        			insertDocConvert.put("pdfOnly", "true");
+			        			insertDocConvert.put("method", "doc2Pdf");
+			        			Logger.info("========= pdfOnly =========");
+			        		}
+			        		else{
+			        			insertDocConvert.put("pdfOnly", "false");
+			        			insertDocConvert.put("method", "putFile");
+			        		}
+
+			        		if(extra_json.has("multiAction") && !"".equals(extra_json.getJSONArray("multiAction"))) {				        			
+			        			insertDocConvert.put("multiAction", extra_json.getJSONArray("multiAction"));				        		
+			        		}else{
+			        			insertDocConvert.put("multiAction", "");
+			        		}
+
+			        		if(extra_json.has("documentImageSize")) {
+			        			JSONArray documentImageSizeArray = extra_json.getJSONArray("documentImageSize");
+			        			insertDocConvert.put("documentImageSize", documentImageSizeArray);
+			        		}else{
+			        			insertDocConvert.put("documentImageSize", "");
+			        		}
+			        		
+			        		//insert to 'docConvert' collection
+			        		//System.out.println("DEBUG FileManage putFile , " + DateUtil.getDateTimeForLog() + " , Before insert 'docConvert' collection =>" + insertDocConvert.toString());
+			        		//String insertResponse = fmd.fileInsert(insertDocConvert, "docConvert");
+			        		//System.out.println("DEBUG FileManage putFile , " + DateUtil.getDateTimeForLog() + " , After insert 'docConvert' collection =>" + insertDocConvert.toString() + " , response=>" + insertResponse);
+							
+			        		
+			        		//if(insertResponse != null && !"".equals(insertResponse)){
+							//	if("500".equals(insertResponse)){										
+							//		throw new Exception("ERROR FileManage putFile , " + DateUtil.getDateTimeForLog() + " , fileInsert to 'docConvert' collection return 500 String , start throw MongoDB Exception , insert query is=>" + insertDocConvert.toString());
+							//	}				
+							//}
+			        		
+							//saveToQueue docConvertToPdf
+			        		// QueueService qs = new QueueService();
+			        		JSONObject toPdf_json = new JSONObject();
+			        		toPdf_json.put("txid", txid);
+			        		//System.out.println("DEBUG FileManage putFile , " + DateUtil.getDateTimeForLog() + " , Before saveToQueue toPdf_json=>" + toPdf_json.toString() + " , groupName=>docConvertToPdf");
+			        		// String saveToQueueResult = qs.saveToQueue(toPdf_json.toString(), "docConvertToPdf");
+			        		
+			        	}
+			        	break;
+			        case ContentType.Video:	//是否需要影片轉檔
+			        	/*暫時Pass
+			        	if(extra_json.has("convert") && extra_json.getString("convert").equals("true")){
+			        		//System.out.println("DEBUG FileManage putFile , " + DateUtil.getDateTimeForLog() + " ,  ENTER VIDEO CONVERT ,fileid=>" + fileid + " , extra_json=>" + extra_json);				        		
+			        		convertVideo(fileid,jsonObj);	
+			        	}*/
+			        	break;
+			        case ContentType.WbVideo:	//是否需要影片轉檔
+			        	/*暫時Pass
+			        	if(extra_json.has("convert") && extra_json.getString("convert").equals("true")){
+			        		//System.out.println("DEBUG FileManage putFile , " + DateUtil.getDateTimeForLog() + " ,  ENTER WbVideo CONVERT ,fileid=>" + fileid + " , extra_json=>" + extra_json);				        						        		
+								convertVideo(fileid,extra_json.toString());
+			        	}*/
+			        	break;
+			        case ContentType.Audio:
+			        	/*暫時Pass
+			        	if(extra_json.has("convert") && extra_json.getString("convert").equals("true")){				        		
+			        		//System.out.println("DEBUG FileManage putFile , " + DateUtil.getDateTimeForLog() + " ,  ENTER Audio CONVERT ,fileid=>" + fileid + " , extra_json=>" + extra_json);				        		
+			        		fc.audioConvert(fileid);
+			        	}*/
+			        	break;			        
+			        case ContentType.WbAudio:
+			        	/*暫時Pass
+			        	if(extra_json.has("convert") && extra_json.getString("convert").equals("true")){				        		
+			        		//System.out.println("DEBUG FileManage putFile , " + DateUtil.getDateTimeForLog() + " ,  ENTER WbAudio CONVERT ,fileid=>" + fileid + " , extra_json=>" + extra_json);			        		
+			        		fc.audioConvert(fileid);
+			        	}*/
+			        	break;
+			        }
+			        if(contentType!= ContentType.Doc){
+				        if(extra_json.has("multiAction")&& !extra_json.getString("multiAction").equals("")) {					        	
+				        	//System.out.println("DEBUG FileManage putFile , " + DateUtil.getDateTimeForLog() + " ,  ENTER contentType!= ContentType.Doc ,fileid=>" + fileid + " , multiAction=>" + extra_json.getString("multiAction") + " , extra_json=>" + extra_json);
+				        	
+//				        	//rtn.put("url", new JSONObject(ir.multiAction(fileid, extra_json.getString("multiAction"))));
+				        	//rtn.put("url", new JSONObject(ir.multiAction(fileid, syncActions.toString())));
+				        	
+				        	String multiAction = syncActions.length() > 0 ? syncActions.toString() : extra_json.getString("multiAction");
+				        	rtn.put("url", new JSONObject(ir.multiAction(fileid, multiAction)));
+				        	Logger.info(multiAction.length() + " sync multiAction items processed => " + multiAction.toString());
+				        	
+				        	// rtn.put("url", new JSONObject(ir.multiAction(fileid, syncActions.toString())));
+//				        	rtn.put("url", new JSONObject(ir.multiAction(fileid, syncActions.toString())));
+//				        	logger.info(syncActions.length() + " sync multiAction items processed => " + syncActions.toString());
+				        	
+				        	if(asyncActions.length() > 0){
+				        		
+				        		// maConvert
+					        	JSONObject queueItem = new JSONObject();
+					        	Logger.info("put " + asyncActions.length() + " async multiAction items to queue 'maConvert' => " + asyncActions.toString());
+					        	/*
+					        	{
+					        		 *   fileId:'fileId',
+					        		 *   tags:['xxx','xxx'],     // 指定要轉檔的 JSONArray tags 清單, 空值(預設)為全部重新轉檔. 
+					        		 *   includeSuccess          // 己成功的 tag 是否需要重新轉檔, 預設 false
+					        		 * }
+					        	*/
+					        	
+					        	queueItem.put("fileId", fileid);
+//					        	String saveToQueueResult = qs.saveToQueue(queueItem.toString(), "maConvert");
+					        	//TODO Johnson 送Queue步驟待確認，是否還需要
+					        	/*String saveToQueueResult = qs.saveToQueue(queueItem.toString(), Config.QName_MA); 
+					        	if(saveToQueueResult != null && !"".equals(saveToQueueResult) && saveToQueueResult.indexOf("Exception") > -1){
+					        		Logger.error("async saveToqueue Error => " + saveToQueueResult + ", fileId => " + fileid);
+				        		}
+					        	else{
+					        		Logger.info("async queue result => " + saveToQueueResult);
+					        	}*/
+				        	}
+				        }
+			        }
+			        
+			        			        
+			        //回傳值
+		        	rtn.put("fileId", fileid);
+		        	rtn.put("fileName", fileName);
+		        	rtn.put("filePath",filepath_forS3);
+		        	rtn.put("contenttype", tools.getContentType(contentType));
+		        	//rtn.put("esbtime",time1+"");
+	        }
+	        
+			
 			}catch(JSONException e){
 				throw new DocApplicationException("NotPresent",3);//erroehandler 必填欄位未填
 			}
+
 			
-			return null;
+			
+			return rtn.toString();
 	}
 
 	@Override
@@ -260,7 +637,7 @@ public class docAPIImp implements docAPI{
 				JSONArray userData = jsonObj.getJSONArray("getFileArr");
 				
 				
-				JSONArray users = new JSONArray(dynamoService.dynamoGetItems("users",userData));
+				JSONArray users = new JSONArray(dynamoService.getItems("users",userData));
 				JSONObject jomongos= new JSONObject();	 // 從 mongo 中查詢到, 且未被 disable 的資料
 					
 				
@@ -514,6 +891,7 @@ public class docAPIImp implements docAPI{
 			JSONObject returnObject = new JSONObject();
 			JSONObject paramObj;
 			try {
+			/*
 			//paramVal is {"apnum":"10400","pid":"10400","content-type","image/jpeg","filename":"123","extra":"1234"}
 			paramObj = new JSONObject(this.decryptParam(param));
 			
@@ -566,14 +944,16 @@ public class docAPIImp implements docAPI{
 			withString("source", "http://localhost:8080/DreamsAdmin/Dream/DreamFwdAction_activityBroadcasting.action?dreamType=2").
 			withString("description", "description").
 			withString("title", "title");
-			
+			*/
 			/*if(contentType == ContentType.Video || contentType == ContentType.WbVideo)
 				putItem.withString("videoQuality", videoQualityObj);
 			
 			*/
 			
-			dynamoService.putItem("users", putItem);
-			
+			//dynamoService.putItem("users", putItem);
+			JSONObject putObj = new JSONObject(putfile(param));
+			String filepath_forS3=putObj.getString("filePath");
+			String fileName = putObj.getString("fileName");
 			 //去掉“-”符号 
 			String policy_document =
 				      "{\"expiration\": \"2017-01-01T00:00:00Z\"," +
@@ -581,11 +961,12 @@ public class docAPIImp implements docAPI{
 				          "{\"bucket\": \""+bucketName+"\"}," +
 				          "[\"starts-with\", \"$key\", \""+filepath_forS3+"\"]," +
 				          "{\"acl\": \"public-read\"}," +
-				          "{\"Content-Disposition\": \""+ paramObj.getString("Content_Disposition") +"\"},"+
+				          //"{\"Content-Disposition\": \""+ fileName +"\"},"+
 				          "{\"acl\": \"public-read\"},"+
-				          "[\"starts-with\", \"$Content-Type\", \""+ paramObj.getString("content-type") +"\"]" +
+				          "[\"starts-with\", \"$Content-Type\", \""+ putObj.getString("contenttype") +"\"]" +
 				        "]" +
 				      "}";
+			// "{\"Content-Disposition\": \""+ fileName +"\"},"此檔案先不加
 			
 			//"[\"starts-with\", \"$Content-Type\", \"image/\"]," +
 			
@@ -608,7 +989,7 @@ public class docAPIImp implements docAPI{
 				returnObject.put("signature", signature);
 				returnObject.put("objectKey", filepath_forS3);
 				returnObject.put("bucketName", bucketName);
-				returnObject.put("Content_Disposition", paramObj.getString("Content_Disposition"));
+				returnObject.put("Content_Disposition", fileName);
 			
 			} catch (InvalidKeyException | UnsupportedEncodingException |
 					NoSuchAlgorithmException | NullPointerException | JSONException e) {
@@ -617,7 +998,5 @@ public class docAPIImp implements docAPI{
 				throw new DocApplicationException(e,11);
 			}
 			return returnObject.toString();
-		}
-
-		
+		}	
 }

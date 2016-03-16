@@ -16,6 +16,7 @@ public class DocErrorHandler implements ExceptionMapper<DocApplicationException>
     	JSONObject errObject = new JSONObject();
     	
     	if( exception instanceof DocApplicationException ){
+    		exception.printStackTrace();
     		errObject.put("message",exception.getMessage());
         	errObject.put("code",((DocApplicationException)exception).getCode());
         	errObject.put("trace_id","");

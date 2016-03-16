@@ -32,7 +32,7 @@ public class Convert {
 			DynamoService db = new DynamoService();
 			//TODO Johnson 改成DynamoService 模式
 			//JSONObject data = db.findConvert(fileId);
-			JSONObject data = new JSONObject(db.dynamoGetItem("convert", fileId));
+			JSONObject data = new JSONObject(db.getItem("convert", fileId));
 			if(data != null)
 				return new Convert(data, db);
 		}
@@ -82,7 +82,7 @@ public class Convert {
 		// 檢查 convert.status 各 tag 的狀態, 若是均是 success, 才 on success, 否則 fail.
 		//TODO Johnson 改成DynamoDB取fileid模式
 		//JSONObject user = db.findUser(this.getFileId());		
-		JSONObject user = new JSONObject(db.dynamoGetItem("users", this.getFileId()));
+		JSONObject user = new JSONObject(db.getItem("users", this.getFileId()));
 		if(new tools().isEmpty(user.toString())) {
 			// logger.error("fileid in users collection not found => " + fileId);
 			return false;
@@ -119,14 +119,12 @@ public class Convert {
 		//TODO Johnson Dynamo更新實作方式改變return db.upadateConvert(this.json);
 		
 		boolean data=false;
-		/*
 		try {
 			data = "".equals(db.updateItem("convert", this.getFileId(), "status", new JSONObject(this.json)))? true: false;
 		} catch (DocApplicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		*/
 		return data;
 		
 	}

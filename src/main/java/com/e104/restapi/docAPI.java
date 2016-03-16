@@ -10,6 +10,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
 import com.e104.ErrorHandling.DocApplicationException;
 
 import io.swagger.annotations.Api;
@@ -161,13 +162,10 @@ public interface docAPI {
 	   public String getVersion();
 	   
 	   @POST
-	   @Path("/putFile")
+	   @Path("/putfile")
 	   @ApiOperation(value = "putfile ", httpMethod = "POST")
 	   @ApiResponses(value = { @ApiResponse(code = 200, message = "http/1.1 200 OK{\"error\":\"\",\"data\":\"\",\"success\":\"true\"}")})
-	   public String putFile(@ApiParam(value = "{\"apnum\":\"10400\","
-	   		+ "\"pid\":\"10400\",\"content-type\":\"image/jpeg\","
-	   		+ "\"filename\":\"123.jpg\","
-	   		+ "\"jsonObj\":{\"ectraNo\":\"111-222-333\"},\"isP\":1}", required = true) @PathParam("jsonData") String jsonData) throws DocApplicationException;
+	   public String putfile(String jsonData) throws DocApplicationException;
 	   
 	   @DELETE
 	   @Path("/removeKey")
@@ -237,4 +235,5 @@ public interface docAPI {
 	   @ApiOperation(value = "Get file Url", httpMethod = "GET")
 	   @ApiResponses(value = { @ApiResponse(code = 200, message = "http/1.1 200 OK{\"error\":\"\",\"data\":\"\",\"success\":\"true\"}")})
 	   public String getFileUrlnoRedis(@ApiParam(value = "Param is decode,need jsonObj & timestamp", required = true) @PathParam("Param") String Param);
+	   
 }

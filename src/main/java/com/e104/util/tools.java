@@ -3,10 +3,17 @@ package com.e104.util;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import org.apache.logging.log4j.*;
+
 import net.spy.memcached.MemcachedClient;
+
+
+
+
 
 
 
@@ -14,9 +21,7 @@ import net.spy.memcached.MemcachedClient;
 
 //import org.apache.catalina.util.Base64;
 import org.apache.commons.codec.binary.Base64;
-
-
-import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,12 +31,15 @@ import org.json.JSONObject;
 
 
 
+
+
+
+
 import com.e104.enums.Protocol;
-import com.e104.restapi.model.docAPIImp;
 import com.e104.util.ContentType;
 
 public class tools {
-	private final Logger Logger = LogManager.getLogger(tools.class);
+	private static transient Logger Logger =LogManager.getLogger(tools.class);
 	public boolean isEmpty(String str){
     	return str == null || str.trim().equals("");
     }
@@ -710,13 +718,39 @@ public JSONObject resolveSingleFileUrl(String fileId, JSONObject obj, JSONObject
 		switch (ContentTypeString.toLowerCase()) {
 		case "image/jpeg":
 			return ContentType.Image;
-			
-
+		case "video/mpeg":
+			return ContentType.Video;
+		case "application/msword":
+			return ContentType.Doc;
+		
 		default:
-			return ContentType.Image;
+			return 0;//找不到型態
 		}
 		
 	}
+	
+	//checkContentType
+		public String getContentType(int ContentTypeString){
+			//待續，需補寫其他型態
+			switch (ContentTypeString) {
+			case ContentType.Image:
+				return "image/jpeg";
+			case ContentType.Video:
+				return "video/mpeg";
+			case ContentType.Doc:
+				return "application/msword";
+			
+			default:
+				return "";//找不到型態
+			}
+			
+		}
+	//產生txid
+	public String generateTxid(){
+		return UUID.randomUUID().toString();
+	}
+	
+	
 	/**
 	 * @method generateFileId
 	 * @param contenttype
@@ -753,6 +787,41 @@ public JSONObject resolveSingleFileUrl(String fileId, JSONObject obj, JSONObject
 			//directory.mkdirs();
 		}catch(Exception e){}
 		return returnPath;
+	}
+	
+	/**
+	 * 產生check tag
+	 * @param tag (a~z, A~Z, 0~9 的英數字)
+	 * @return
+	 */
+	public boolean checkTag(String tag){
+		boolean msg = false;
+		try {
+			for(int i=0;i<tag.length();i++) {
+				if(((int)tag.charAt(i)>=48 && (int)tag.charAt(i)<=57) || ((int)tag.charAt(i)>=65 && (int)tag.charAt(i)<=90) || ((int)tag.charAt(i)>=97 && (int)tag.charAt(i)<=122)|| ((int)tag.charAt(i)==45)) {
+					msg = true;
+				}
+				else {
+					msg = false;
+					break;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return msg;
+	}
+	
+	public Map<String, String> json2Map(JSONObject object){
+		Iterator<String> keysItr = object.keys();
+		Map<String,String> data = new HashMap<String,String>();
+		while(keysItr.hasNext()) {
+			String key = keysItr.next();
+		    String value = object.getString(key);
+		    data.put(key, value);
+		}
+		
+		return data;
 	}
 	
 }
