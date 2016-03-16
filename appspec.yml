@@ -1,11 +1,13 @@
+version: 0.0.1
 os: linux
 files:
   - source: /
     destination: /opt/tomcat/johnson/webapps
 hooks:
   BeforeInstall:
-    - location: Scripts/UnzipResourceBundle.sh
-    - location: Scripts/UnzipDataBundle.sh
+    - location: Scripts/copyWarToTomcat.sh
+    timeout: 10
+    runas: root
   AfterInstall:
     - location: Scripts/RunResourceTests.sh
       timeout: 10

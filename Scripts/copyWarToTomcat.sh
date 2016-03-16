@@ -1,0 +1,1 @@
+cp docAPI.war /opt/tomcat/johnson/webapps/
