@@ -5,7 +5,7 @@ files:
     destination: /opt/tomcat/johnson/webapps
 hooks:
   BeforeInstall:
-    - location: Scripts/copyWarToTomcat
+    - location: Scripts/copyWarToTomcat.sh
       timeout: 10
       runas: root
   AfterInstall:
