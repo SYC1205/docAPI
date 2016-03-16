@@ -21,10 +21,9 @@
 			<param-value>com.e104.restapi.model.docAPIImp</param-value>
 		</init-param>
 		
-		<!-- CXFNonSpringJaxrsServlet default path, dont't change -->
 		<init-param>
 			<param-name>jaxrs.address</param-name>
-			<param-value>/rest</param-value>
+			<param-value>/</param-value>
 		</init-param>
 
 		<!-- DocErrorHandlere -->
@@ -50,6 +49,8 @@
 				/swagger.json 
 			</param-value>
 		</init-param>
+		
+	
         
 		<load-on-startup>1</load-on-startup>
 	</servlet>
@@ -57,6 +58,5 @@
         <servlet-name>CXFNonSpringJaxrsServlet</servlet-name>
         <url-pattern>/rest/*</url-pattern>
     </servlet-mapping>
-    
     
 </web-app>

@@ -9,6 +9,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.e104.ErrorHandling.DocApplicationException;
@@ -163,9 +164,11 @@ public interface docAPI {
 	   
 	   @POST
 	   @Path("/putfile")
-	   @ApiOperation(value = "putfile ", httpMethod = "POST")
-	   @ApiResponses(value = { @ApiResponse(code = 200, message = "http/1.1 200 OK{\"error\":\"\",\"data\":\"\",\"success\":\"true\"}")})
-	   public String putfile(String jsonData) throws DocApplicationException;
+	   @ApiOperation(value = "", notes = "產生上傳檔案前呼叫，產生檔案名稱", tags={  })
+	   @ApiResponses(value = { 
+		        @ApiResponse(code = 200, message = "Successful response"),
+		        @ApiResponse(code = 400, message = "Error response") })
+	   public String putfile(@ApiParam(value = "JSONObject",required=true)  String jsonData) throws DocApplicationException;
 	   
 	   @DELETE
 	   @Path("/removeKey")
