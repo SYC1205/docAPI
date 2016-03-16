@@ -1,21 +1,81 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<script src="http://code.jquery.com/jquery-2.2.1.min.js" ></script>
+
+
 </head>
 <body>
-<form action="http://awssyslogs03.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
-<input type="text" name="key" value="filetemp/c4af471b4cea4954b8748251432c07a4.jpg" />
-<input type="text" name="content-type" value="image/jpeg" />
-<input type="text" name="acl" value="public-read" />
+<input type="radio" name="ctype" value="image/jpeg">Image
+<input type="radio" name="ctype" value="video/mpg">Video
+<input type="radio" name="ctype" value="application/msword">doc
+
+<!-- mongoDb data check -->
+apnum<input type="text" id="apNum" value="10400">
+pid<input type="text" id="pid" value="10400"/>
+isP<input type="text" id="isP" value="1"/>
+extra<input type="text" id="extra" value="{ectraNo:6ee88242-33cd-4b8f-8347-6d45650ca987}"/>
+
+
+
+<!-- <button value="" onclick="encode()">ENCODE</button><br> -->
+
+<form action="http://e104-filetemp.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
+key<input type="text" id="key" name="key" value="" />
+<input type="hidden" id ="content-type" name="content-type" value="" /><br>
+acl<input type="text" id="acl" name="acl" value="public-read" />
+Content-Disposition<input type="text" id="Content-Disposition" name="Content-Disposition" value="github.jpg" />
+
+
+
+
 <!--<input type="text" name="x-amz-meta-uuid" value="14365123651274" />
 <input type="text" name="x-amz-meta-tag" value="" />-->
+<input type="hidden" id="AWSAccessKeyId" name="AWSAccessKeyId" value="AKIAJXGZ6BOIVQHUNNAQ" />
+<input type="hidden" id="policy" name="policy" value="eyJleHBpcmF0aW9uIjogIjIwMTctMDEtMDFUMDA6MDA6MDBaIiwiY29uZGl0aW9ucyI6IFt7ImJ1Y2tldCI6ICJlMTA0LWZpbGV0ZW1wIn0sWyJzdGFydHMtd2l0aCIsICIka2V5IiwgImZpbGV0ZW1wLzNkNzBhYTkyNDFmYTRhZDU4MWNkMWNlMmM1YjQ2ODgwLmpwZyJdLHsiYWNsIjogInB1YmxpYy1yZWFkIn0seyJDb250ZW50LURpc3Bvc2l0aW9uIjogImdpdGh1Yi5qcGcifSx7ImFjbCI6ICJwdWJsaWMtcmVhZCJ9LFsic3RhcnRzLXdpdGgiLCAiJENvbnRlbnQtVHlwZSIsICJpbWFnZS9qcGVnIl1dfQ==" />
+<input type="hidden" id="signature" name="signature" value="xOigmmoBofPqLyFRCCXIr61qIuA=" />
 
 
-<input type="hidden" name="AWSAccessKeyId" value="AKIAJXGZ6BOIVQHUNNAQ" />
-<input type="hidden" name="policy" value="eyJleHBpcmF0aW9uIjogIjIwMTctMDEtMDFUMDA6MDA6MDBaIiwiY29uZGl0aW9ucyI6IFt7ImJ1Y2tldCI6ICJhd3NzeXNsb2dzMDMifSxbInN0YXJ0cy13aXRoIiwgIiRrZXkiLCAiZmlsZXRlbXAvYzRhZjQ3MWI0Y2VhNDk1NGI4NzQ4MjUxNDMyYzA3YTQuanBnIl0seyJhY2wiOiAicHVibGljLXJlYWQifSxbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiaW1hZ2UvIl0sXX0=" />
-<input type="hidden" name="signature" value="+QXvcIHVoy99qqNz/ra9n006rh8=" />
-<input name="file" type="file" />
+<input id="image_file" name="file" type="file" /><br>
+
 <input name="submit" value="Upload" type="submit" />
 </form>
 </body>
+<script>
+
+$('input[name=ctype]:radio').click(function() {
+	$('#content-type').val($('input[name=ctype]:checked').val());
+})
+$('#image_file').change(function() {
+        var filename = $('#image_file').val().replace(/C:\\fakepath\\/i, '');
+        $('#Content-Disposition').val(filename);
+        encode();
+});
+
+function encode(){
+	var parme = "{\"apnum\":\""+$('#apNum').val()+"\","+
+				"\"pid\":\""+$('#pid').val()+"\","+
+				"\"isP\":\""+$('#isP').val()+"\","+
+				"\"extra\":{\"ectraNo\":\"6ee88242-33cd-4b8f-8347-6d45650ca987\"},"+
+				"\"content-type\":\""+$('#content-type').val()+"\","+
+				//"\"Content_Disposition\":\""+$('#Content-Disposition').val()+"\","+
+				"\"title\":\"測試\","+
+				"\"description\":\"測試\"}";
+				
+				
+	var output = btoa(unescape(encodeURIComponent(parme)));
+	console.log(output);
+	$.get("http://localhost:8080/cxfServer/services/example/signatureByExtraNo/"+output, function(result){
+		
+		//var data = $.parseJSON(result);
+		console.log(result);
+		$('#Content-Disposition').val(result.Content_Disposition);
+		$('#key').val(result.objectKey);
+		$('#policy').val(result.policy_document);
+		$('#signature').val(result.signature);
+	  });
+	
+}
+
+</script>
 </html>

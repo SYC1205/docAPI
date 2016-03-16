@@ -55,7 +55,7 @@
 	</servlet>
     <servlet-mapping>
         <servlet-name>CXFNonSpringJaxrsServlet</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/rest/*</url-pattern>
     </servlet-mapping>
     
     
