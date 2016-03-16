@@ -5,16 +5,18 @@ files:
     destination: /opt/tomcat/johnson/webapps
 hooks:
   BeforeInstall:
-    - location: Scripts/copyWarToTomcat.sh
-    timeout: 10
-    runas: root
+    - location: Scripts/copyWarToTomcat
+      timeout: 10
+      runas: root
   AfterInstall:
-    - location: Scripts/RunResourceTests.sh
+    - location: Scripts/RunResourceTests
       timeout: 10
+      runas: root
   ApplicationStart:
-    - location: Scripts/RunFunctionalTests.sh
+    - location: Scripts/RunFunctionalTests
       timeout: 10
+      runas: root
   ValidateService:
-    - location: Scripts/MonitorService.sh
+    - location: Scripts/MonitorService
       timeout: 10
-      runas: codedeployuser
+      runas: root
