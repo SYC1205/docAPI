@@ -14,7 +14,7 @@
 		
 		<init-param>
 			<param-name>jaxrs.address</param-name>
-			<param-value>/</param-value>
+			<param-value></param-value>
 		</init-param>
 		<init-param>
 			<param-name>jaxrs.providers</param-name>

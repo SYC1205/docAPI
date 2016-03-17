@@ -13,6 +13,7 @@
  	<!-- build -->
  	<build>
 	    <finalName>docAPI</finalName>
+	    <pluginManagement>
 	    <plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -70,6 +71,7 @@
 		        </executions>
 			</plugin>
 		</plugins>
+		</pluginManagement>
  	</build>
  	
 	<!-- dependencies -->

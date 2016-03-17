@@ -9,6 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.e104.ErrorHandling.DocApplicationException;
 import com.e104.util.Config;
 import com.e104.util.Convert;
 import com.e104.util.DateUtil;
@@ -392,7 +393,7 @@ public class ImageProcess {
 		return rtn;
 	}
 	
-	private JSONObject getActionUrl(String fileId, String tag, int isGetUrl, long urlExpiredTime, int isSSL) throws JSONException{
+	private JSONObject getActionUrl(String fileId, String tag, int isGetUrl, long urlExpiredTime, int isSSL) throws JSONException, DocApplicationException{
 		JSONObject rtn = new JSONObject();
 		String timestamp = String.valueOf(new java.util.Date().getTime() + urlExpiredTime);
 		rtn.put("fileId",fileId);//{"fileId":"xxxx"}

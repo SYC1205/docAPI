@@ -14,7 +14,7 @@ public class ClientExceptionMapper implements ExceptionMapper<ClientErrorExcepti
     public Response toResponse(ClientErrorException e)  {
         e.printStackTrace();
         errObject.put("message",e.getMessage());
-    	errObject.put("code",e.getResponse().getStatus());
+    	errObject.put("code","");
     	errObject.put("trace_id","");
         return Response.status(e.getResponse().getStatus()).header("Content-Type", "application/json").entity(new String(errObject.toString())).build();
     }

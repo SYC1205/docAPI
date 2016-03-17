@@ -23,6 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.logging.log4j.*;
 import org.apache.commons.codec.binary.Base64;
+import org.aspectj.weaver.patterns.ThrowsPattern;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -613,18 +614,21 @@ public class docAPIImp implements docAPI{
 
 	//doing##############################################################3
 		@Override
-		public String getFileUrlnoRedis(String Object) {
+		public String getFileUrlnoRedis(String Object) throws DocApplicationException {
 			
 			JSONArray rtn = new JSONArray(); //回傳的JSONArray
 			tools tools = new tools();
-			String jsonObject = tools.decode(Object);
+			//String jsonObject = tools.decode(Object);
 			
 			DynamoService dynamoService = new DynamoService();
-			JSONObject jsonObj = new JSONObject(jsonObject);
+			
 			String returnStr ="";
-			System.out.println("ok"+jsonObj.getJSONArray("getFileArr").toString());
 			
 			try{
+				JSONObject jsonObj = new JSONObject(Object);
+				System.out.println("ok"+jsonObj.getJSONArray("getFileArr").toString());
+			
+			
 			if((Object != null && !"".equals(Object.trim())) && 
 				(jsonObj.has("timestamp") && 
 			    !"".equals(jsonObj.getString("timestamp"))) &&
@@ -866,18 +870,23 @@ public class docAPIImp implements docAPI{
 					errorRtn.put(tmp);
 					return errorRtn.toString();
 				}								
-			}catch (Exception e1) {		
-				Logger.error("jsonObj=>" + jsonObj, e1);
+			}catch (JSONException e1) {		
+				Logger.error("jsonObj=>" + Object, e1);
 				e1.printStackTrace();
-				try{
+				
+				throw new DocApplicationException("Json格式轉換失敗", 1);
+				//TODO Johnson 新的error handler舊的拿掉
+				/*try{
 					JSONArray errorRtn = new JSONArray(); 
 					JSONObject tmp= tools.generateGetFileDetailErrorObject("", "getFileUrl Exception");
 					errorRtn.put(tmp);
 					return errorRtn.toString();
 				}catch(Exception e){
-					Logger.error("jsonObj=>" + jsonObj , e);
-				};
-			}	
+					Logger.error("jsonObj=>" + Object , e);
+				};*/
+			}catch(Exception e1){
+				throw new DocApplicationException(e1,3);
+			}
 					
 			
 			return returnStr;
