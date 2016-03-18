@@ -1,6 +1,7 @@
 package com.e104.util;
 
 import java.math.BigInteger;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +11,12 @@ import java.util.Map;
 import java.util.UUID;
 
 import net.spy.memcached.MemcachedClient;
+
+
+
+
+
+
 
 
 
@@ -29,12 +36,23 @@ import org.json.JSONObject;
 
 
 
+import com.e104.util.Config;
 
 
 
 
 
 
+
+
+
+
+
+import com.amazonaws.HttpMethod;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.e104.enums.Protocol;
 import com.e104.util.ContentType;
 
@@ -158,6 +176,18 @@ public class tools {
 		return fileExtension;
 	}
 	
+	public String get_file_keypath(String srcFileName) throws Exception{
+		String fileKeyPath = "";
+		// logger.info("get_file_extension srcFileName==>"+srcFileName);
+		int startInt = srcFileName.lastIndexOf(".");
+		if (startInt >1) {
+			fileKeyPath = srcFileName.substring(0, startInt);
+			//fileExtension = FilenameUtils.getExtension(srcFileName);
+		}
+		// logger.info("get_file_extension fileExtension==>"+fileExtension);
+		return fileKeyPath;
+	}
+	
 	/**
 	 * 將string做md5編碼
 	 * @param in 要加密的string
@@ -234,7 +264,23 @@ public class tools {
 		
 		// logger.info("INFO generateFileURLforPublic(), Encrypt url==>"+url+" timestamp:"+ timestamp+ " isP:"+ isP);
 		try {
-			if  (isP == 0) {
+			//TODO Johnson Timestamp可能不用改用S3的Signed URL
+			AmazonS3 s3client = new AmazonS3Client(new ProfileCredentialsProvider()); 
+		       
+			java.util.Date expiration = new java.util.Date();
+			long msec = expiration.getTime();
+			msec += 1000 * 60 * 60; // 1 hour.
+			expiration.setTime(msec);
+			  
+			GeneratePresignedUrlRequest generatePresignedUrlRequest = 
+			              new GeneratePresignedUrlRequest( Config.backetName, filepath);
+			generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
+			generatePresignedUrlRequest.setExpiration(expiration);
+			             
+			URL s = s3client.generatePresignedUrl(generatePresignedUrlRequest);
+			
+			return s.toString();
+			/*if  (isP == 0) {
 				JSONObject v_json = new JSONObject("{\"timestamp\":\""+String.valueOf(timestamp)+"\",\"isP\":\""+String.valueOf(isP)+"\"}");
 				String encryptVal = xorEncrypt(v_json.toString());
 				//2014-01-09 fix for md5 encrypt url
@@ -246,7 +292,8 @@ public class tools {
 				//2014-01-09 fix for md5 encrypt url
 				// logger.info("INFO generateFileURLforPublic() , return:" + url + tagFileName +  "?"+md5(url+Config.MD5_PWD_ISP1)+"&v="+encryptVal);
 				return url + tagFileName + "?"+md5(urlNoProtocol+Config.MD5_PWD_ISP1)+"&v="+encryptVal;
-			}
+			}*/
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			Logger.error("ERROR generateFileURLforPublic() , filepath=>" + filepath + " , timestamp=>" + String.valueOf(timestamp) + " , isP=>" + isP);
@@ -323,8 +370,9 @@ public JSONObject resolveSingleFileUrl(String fileId, JSONObject obj, JSONObject
 		//2014-01-09 fix for md5 encrypt 
 		//start
 		//end
-		//String filepath = FilenameUtils.getFullPath(obj.getString("filepath"))+fileId;
-		String filepath = obj.getString("filepath");
+		
+		String filepath = this.get_file_keypath(obj.getString("filepath"));
+		//String filepath = obj.getString("filepath");
 		// String filetype = "."+FilenameUtils.getExtension(obj.getString("filepath"));
 		
 		//String filename = obj.getString("filename");	// 從 filename 取 extension 會有大小寫區分.

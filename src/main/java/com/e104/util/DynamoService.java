@@ -91,7 +91,7 @@ public String getItems(String tableName,JSONArray fileIds){
 	JSONArray userData = new JSONArray();
 	
 	
-	for (int i=1;i<fileIds.length();i++){
+	for (int i=0;i<fileIds.length();i++){
 		try {
 			//System.out.println(getItem(tableName,fileIds.getJSONObject(i).getString("fileId")));
 			userData.put(new JSONObject(getItem(tableName,fileIds.getJSONObject(i).getString("fileId"))));

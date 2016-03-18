@@ -144,11 +144,13 @@ public interface docAPI {
 	   @ApiResponses(value = { @ApiResponse(code = 200, message = "http/1.1 200 OK{\"error\":\"\",\"data\":\"\",\"success\":\"true\"}")})
 	   public String getFileList(@ApiParam(value = "Param is decode,need pid & contenttype & apnum", required = true) @PathParam("Param") String Param);
 	   
-	   @GET
-	   @Path("/getFileUrl/(Param)")
-	   @ApiOperation(value = "Get file Url", httpMethod = "GET")
-	   @ApiResponses(value = { @ApiResponse(code = 200, message = "http/1.1 200 OK{\"error\":\"\",\"data\":\"\",\"success\":\"true\"}")})
-	   public String getFileUrl(@ApiParam(value = "Param is decode,need jsonObj & timestamp", required = true) @PathParam("Param") String Param);
+	   @POST
+	   @Path("/getFileUrl")
+	   @ApiOperation(value = "", notes = "產生上傳檔案前呼叫，產生檔案名稱", tags={  })
+	   @ApiResponses(value = { 
+		        @ApiResponse(code = 200, message = "Successful response"),
+		        @ApiResponse(code = 400, message = "Error response") })
+	   public String getFileUrl(@ApiParam(value = "JSONObject",required=true)  String jsonData) throws DocApplicationException;
 	   
 	   @GET
 	   @Path("/getQueueLength")
