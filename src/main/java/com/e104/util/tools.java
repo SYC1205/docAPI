@@ -3,7 +3,9 @@ package com.e104.util;
 import java.math.BigInteger;
 import java.net.URL;
 import java.security.MessageDigest;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -15,23 +17,14 @@ import net.spy.memcached.MemcachedClient;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 //import org.apache.catalina.util.Base64;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+
 
 
 
@@ -268,10 +261,11 @@ public class tools {
 			AmazonS3 s3client = new AmazonS3Client(new ProfileCredentialsProvider()); 
 		       
 			java.util.Date expiration = new java.util.Date();
-			long msec = expiration.getTime();
-			msec += 1000 * 60 * 60; // 1 hour.
-			expiration.setTime(msec);
-			  
+			//long msec = expiration.getTime();
+			//msec += 1000 * 60 * 60; // 1 hour.
+			expiration.setTime(timestamp*1000);
+			
+			
 			GeneratePresignedUrlRequest generatePresignedUrlRequest = 
 			              new GeneratePresignedUrlRequest( Config.backetName, filepath);
 			generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
@@ -280,7 +274,7 @@ public class tools {
 			URL s = s3client.generatePresignedUrl(generatePresignedUrlRequest);
 			
 			return s.toString();
-			/*if  (isP == 0) {
+			/*if  (isP == 0) {]'\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 				JSONObject v_json = new JSONObject("{\"timestamp\":\""+String.valueOf(timestamp)+"\",\"isP\":\""+String.valueOf(isP)+"\"}");
 				String encryptVal = xorEncrypt(v_json.toString());
 				//2014-01-09 fix for md5 encrypt url
@@ -870,6 +864,12 @@ public JSONObject resolveSingleFileUrl(String fileId, JSONObject obj, JSONObject
 		}
 		
 		return data;
+	}
+	
+	public String getUploadConfig(String extraNo){
+		DynamoService dynamoService = new DynamoService();
+		//dynamoService.
+		return "";
 	}
 	
 }

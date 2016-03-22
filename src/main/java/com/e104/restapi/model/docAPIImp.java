@@ -438,15 +438,15 @@ public class docAPIImp implements docAPI{
 			JSONObject paramObj;
 			try {
 			//paramVal is {"apnum":"10400","pid":"10400","content-type":"image/jpeg","Content_Disposition":"123.jpg","extra":{"ectraNo":"111-222-333"},"isP":1, "title":"測試","description":"測試"}
-			paramObj = new JSONObject(this.decryptParam(jsonData));
-			
+			//paramObj = new JSONObject(this.decryptParam(jsonData));
+				paramObj = new JSONObject(jsonData);
 			//確認必填欄位
 			if (!paramObj.has("apnum") || "".equals(paramObj.getString("apnum")) ||
 				!paramObj.has("pid") || "".equals(paramObj.getInt("pid")) ||
 				!paramObj.has("Content_Disposition") || "".equals(paramObj.getString("Content_Disposition")) ||
 			    !paramObj.has("extra") || "".equals(paramObj.getJSONObject("extra")) ||
 			    !paramObj.has("isP") || "".equals(paramObj.getInt("isP")) ||
-			    !paramObj.has("content-type") || "".equals(paramObj.getString("content-type")) ||
+			    !paramObj.has("contenttype") || "".equals(paramObj.getString("contenttype")) ||
 			    !paramObj.has("title") || "".equals(paramObj.getString("title")) ||
 			    !paramObj.has("description") || "".equals(paramObj.getString("description")))
 				throw new DocApplicationException("NotPresent",1);//erroehandler 必填欄位未填
@@ -455,7 +455,7 @@ public class docAPIImp implements docAPI{
 			String pid = paramObj.getString("pid");
 			String fileName = paramObj.getString("Content_Disposition");
 			int isP = paramObj.getInt("isP");
-			int contentType = tools.getContentType(paramObj.getString("content-type"));
+			int contentType = tools.getContentType(paramObj.getString("contenttype"));
 			JSONObject extra_json = paramObj.getJSONObject("extra");
 			String title = paramObj.getString("title");
 			String description = paramObj.getString("description");
@@ -532,8 +532,9 @@ public class docAPIImp implements docAPI{
 	        	convert.put("insertDate", now);
 	        	convert.put("triggerDate", now);
 	        	convert.put("status", new JSONObject());		// 預先建立轉檔狀態欄位.
-	        	
+	        	convert.put("convertLists", new JSONObject());
 	        	JSONArray convertItems = new JSONArray();
+	        	
 	        	convert.put("convertItems", convertItems);		// 預先建立轉檔項目欄位.
 	        	
 	        	
@@ -570,7 +571,8 @@ public class docAPIImp implements docAPI{
 	        	JSONArray maArray = null;
 	        	JSONArray syncActions = new JSONArray();		// 立即轉檔的項目
 	        	JSONArray asyncActions = new JSONArray();		// 不需立即轉檔的項目
-	        	
+	        	//TODO Johnson做法改變，以往單點與套餐2選一，如今可以混用
+	        	/*
 	        	if(extra_json.has("multiAction") && !tools.isEmpty(extra_json.getString("multiAction"))){
 	        		JSONObject maConvert = new JSONObject();
 	        		maConvert.put("itemName", "maConvert");			// itemName 用以識別轉檔項目
@@ -584,9 +586,25 @@ public class docAPIImp implements docAPI{
 	        		else
 	        			maConvert.put("multiAction", maArray);	        			
         			
-        			convertItems.put(maConvert);
+        			convertItems.put(maConvert.toString());
         			
-	        	}		        	
+	        	}		 */    
+	        	JSONObject maConvert = new JSONObject();
+	        	JSONObject convertList = new JSONObject();
+	        	
+        		maConvert.put("itemName", "maConvert");		
+	        	if(extra_json.has("multiAction") && !tools.isEmpty(extra_json.getString("multiAction"))){
+	        		maArray = extra_json.getJSONArray("multiAction");
+	        		maConvert.put("multiAction", maArray);
+	        		convertList.put("multiAction", maArray.toString());
+	        	}
+	        	
+	        	if(!"".equals(extraNo)){
+	        		maConvert.put("extraNo", extraNo);
+	        		convertList.put("extraNo", extraNo.toString());
+	        	}
+	        	convert.put("convertLists",convertList);
+	        	convertItems.put(maConvert);
 	        	
 	        	// 若上傳的檔案類型為圖片, 因支援同步、非同步轉檔參數, // --預先分析轉檔請求相依性. 
 	        	// (相依性可能因多層 parent, 分析複雜, 基於上傳效率及程式精簡, 還是要求於前期上傳時的參數就要正確設置.)
@@ -1166,7 +1184,7 @@ public class docAPIImp implements docAPI{
 		}
 
 		@Override
-		public String signatureByExtraNo(String param) throws DocApplicationException {
+		public String signatureByExtraNo(String jsonData) throws DocApplicationException {
 			//SimpleDateFormat sdf = new SimpleDateFormat("E yyyy-MM-dd");
 			JSONObject returnObject = new JSONObject();
 			JSONObject paramObj;
@@ -1231,9 +1249,10 @@ public class docAPIImp implements docAPI{
 			*/
 			
 			//dynamoService.putItem("users", putItem);
-			JSONObject putObj = new JSONObject(putfile(param));
+			JSONObject putObj = new JSONObject(putfile(jsonData));
 			String filepath_forS3=putObj.getString("filePath");
 			String fileName = putObj.getString("fileName");
+			//String extra = putObj.getString("extra");
 			 //去掉“-”符号 
 			String policy_document =
 				      "{\"expiration\": \"2017-01-01T00:00:00Z\"," +

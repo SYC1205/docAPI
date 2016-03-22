@@ -15,6 +15,7 @@ apnum<input type="text" id="apNum" value="10400">
 pid<input type="text" id="pid" value="10400"/>
 isP<input type="text" id="isP" value="1"/>
 extra<input type="text" id="extra" value="{ectraNo:6ee88242-33cd-4b8f-8347-6d45650ca987}"/>
+Content-Disposition<input type="text" id="Content-Disposition" name="Content-Disposition" value="github.jpg" />
 
 
 
@@ -24,7 +25,6 @@ extra<input type="text" id="extra" value="{ectraNo:6ee88242-33cd-4b8f-8347-6d456
 key<input type="text" id="key" name="key" value="" />
 <input type="hidden" id ="content-type" name="content-type" value="" /><br>
 acl<input type="text" id="acl" name="acl" value="public-read" />
-Content-Disposition<input type="text" id="Content-Disposition" name="Content-Disposition" value="github.jpg" />
 
 
 
@@ -65,7 +65,48 @@ function encode(){
 				
 	var output = btoa(unescape(encodeURIComponent(parme)));
 	console.log(output);
-	$.get("http://localhost:8080/cxfServer/services/example/signatureByExtraNo/"+output, function(result){
+	var extraData = {
+			convert:"false",
+			extraNo:"6ee88242-33cd-4b8f-8347-6d45650ca987"	
+	};
+	var jsonData = {apnum:"10400",
+			pid:"10400",
+			contenttype:"image/jpeg",
+			Content_Disposition:$('#Content-Disposition').val(),
+			isP:1,
+			extra:extraData,
+			title:"測試",
+			description:"測試"};
+
+	$.ajax({
+		method:'POST',
+		url:'http://localhost:8080/docAPI/rest/signatureByExtraNo',
+		contentType: "application/json; charset=utf-8",
+		dataType: 'json',
+		data:JSON.stringify(jsonData)
+		
+		}).done(function(msg){
+			alert("資料建立成功");
+			$('#Content-Disposition').val(msg.Content_Disposition);
+			$('#key').val(msg.objectKey);
+			$('#policy').val(msg.policy_document);
+			$('#signature').val(msg.signature);
+			//$('#extra').val(msg.extra);
+		
+		});
+	
+	/*$.postJSON('http://localhost:8080/docAPI/rest/signatureByExtraNo',
+		{apnum:"10400",
+		contenttype:"image/jpeg",
+		title:"測試",
+		description:"測試"},
+		function(result,status){
+			if (status='success')
+				{alert("讚");}
+		});
+	
+	*/
+	/*$.get("http://localhost:8080/docAPI/rest/signatureByExtraNo/"+output, function(result){
 		
 		//var data = $.parseJSON(result);
 		console.log(result);
@@ -73,7 +114,7 @@ function encode(){
 		$('#key').val(result.objectKey);
 		$('#policy').val(result.policy_document);
 		$('#signature').val(result.signature);
-	  });
+	  });*/
 	
 }
 

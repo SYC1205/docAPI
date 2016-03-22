@@ -31,6 +31,7 @@ public class DynamoConvert {
 	private String filepath;
 	private String insertDate;
 	private String triggerDate;
+	private Map<String, String> convertLists = new HashMap<String, String>();
 	private Map<String, String> status = new HashMap<String, String>();
 	private List<String> convertItems = new ArrayList<>();
 	private Map<String, String> videoQuality;
@@ -44,6 +45,10 @@ public class DynamoConvert {
 		insertDate = convert.getString("insertDate");
 		triggerDate = convert.getString("triggerDate");
 		
+		
+		convertLists = tools.json2Map(convert.getJSONObject("convertLists"));
+		
+		//convertLists = convert.getJSONObject("multiAction")
 		
 		for (int i=0;i<convert.getJSONArray("convertItems").length();i++ ){
 			convertItems.add(convert.getJSONArray("convertItems").getJSONObject(i).toString());
@@ -69,7 +74,8 @@ public class DynamoConvert {
 				withString("insertDate", insertDate).
 				withString("triggerDate", triggerDate).
 				withMap("status", status).
-				withList("convertItems",convertItems);
+				withList("convertItems",convertItems).
+				withMap("convertLists", convertLists);
 		//非必填項目
 		if(videoQuality!=null) 
 			putItem.withMap("videoQuality", videoQuality);

@@ -13,17 +13,22 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.e104.ErrorHandling.DocApplicationException;
+import com.e104.restapi.model.docAPIImp;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.Example;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-
-@Api(value = "/")
+@Path("/rest")
+@Api(value = "/rest")
 public interface docAPI {
 	  @PUT
 	   @Path("/addKey")
@@ -166,11 +171,14 @@ public interface docAPI {
 	   
 	   @POST
 	   @Path("/putfile")
-	   @ApiOperation(value = "", notes = "產生上傳檔案前呼叫，產生檔案名稱", tags={  })
-	   @ApiResponses(value = { 
-		        @ApiResponse(code = 200, message = "Successful response"),
-		        @ApiResponse(code = 400, message = "Error response") })
-	   public String putfile(@ApiParam(value = "JSONObject",required=true)  String jsonData) throws DocApplicationException;
+	   @ApiOperation(value = "", notes = "產生上傳檔案前呼叫，產生檔案名稱", response = docAPIImp.class)
+	   @ApiResponses(value =  @ApiResponse(code = 200, message = "Successful response"))
+	   @ApiImplicitParams(
+		   @ApiImplicitParam(name = "jsonData", value = "JSONObject", required = true, dataType = "Object", paramType = "body") 
+		  )
+
+	   @ApiModelProperty(value = "pet status in the store",dataType="Object",name="123",access="1")
+	   public String putfile( String jsonData) throws DocApplicationException;
 	   
 	   @DELETE
 	   @Path("/removeKey")
@@ -228,10 +236,13 @@ public interface docAPI {
 	   public String audioConvert(@ApiParam(value = "{fileId}", required = true) @PathParam("Param") String Param);
 	   
 	   
-	   @GET
-	   @Path("/signatureByExtraNo/{param}")
-	   @ApiOperation(value = "parme is {\"apnum\":\"10400\",\"pid\":\"10400\",\"content-type\",\"image/jpeg\",\"filename\":\"123\",\"extra\":\"1234\"}")
-	   public String signatureByExtraNo(@ApiParam(value = "Param is decode,need jsonObj & timestamp", required = true) @PathParam("param") String param) throws DocApplicationException; 
+	   @POST
+	   @Path("/signatureByExtraNo")
+	   @ApiOperation(value = "", notes = "產生上傳檔案前呼叫，產生檔案名稱", tags={  })
+	   @ApiResponses(value = { 
+		        @ApiResponse(code = 200, message = "Successful response"),
+		        @ApiResponse(code = 400, message = "Error response") })
+	   public String signatureByExtraNo(@ApiParam(value = "JSONObject",required=true)  String jsonData) throws DocApplicationException; 
 	   
 	 //doing##########################################################
 	   
