@@ -267,7 +267,7 @@ public class tools {
 			
 			
 			GeneratePresignedUrlRequest generatePresignedUrlRequest = 
-			              new GeneratePresignedUrlRequest( Config.backetName, filepath);
+			              new GeneratePresignedUrlRequest( Config.bucketName, filepath);
 			generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
 			generatePresignedUrlRequest.setExpiration(expiration);
 			             
@@ -823,7 +823,7 @@ public JSONObject resolveSingleFileUrl(String fileId, JSONObject obj, JSONObject
 			String layer1 = fid.substring(0,3);
 			String layer2 = fid.substring(3,6);
 			String layer3 = fid.substring(6,9);
-			returnPath = Config.ROOT_PATH + "/" + layer1 + "/" + layer2 + "/" + layer3 + "/";
+			returnPath =  layer1 + "/" + layer2 + "/" + layer3 + "/";
 		
 			//File directory = new File(returnPath);
 			//directory.mkdirs();
