@@ -30,7 +30,7 @@ import io.swagger.models.Swagger;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-//@Api(value = "/rest")
+@Api(value = "/rest")
 //@Path("/rest")
 public interface docAPI {
 	
