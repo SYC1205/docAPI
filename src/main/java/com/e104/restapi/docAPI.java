@@ -2,6 +2,7 @@ package com.e104.restapi;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -11,6 +12,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.annotation.XmlElement;
 
 import com.e104.ErrorHandling.DocApplicationException;
 import com.e104.restapi.model.docAPIImp;
@@ -24,12 +26,14 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.Example;
+import io.swagger.models.Swagger;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Path("/rest")
-@Api(value = "/rest")
+//@Api(value = "/rest")
+//@Path("/rest")
 public interface docAPI {
+	
 	  @PUT
 	   @Path("/addKey")
 	   @ApiOperation(value = "Update user collection key & value")
@@ -174,11 +178,32 @@ public interface docAPI {
 	   @ApiOperation(value = "", notes = "產生上傳檔案前呼叫，產生檔案名稱", response = docAPIImp.class)
 	   @ApiResponses(value =  @ApiResponse(code = 200, message = "Successful response"))
 	   @ApiImplicitParams(
-		   @ApiImplicitParam(name = "jsonData", value = "JSONObject", required = true, dataType = "Object", paramType = "body") 
+		   @ApiImplicitParam(name = "body", value = "JSONObject", required = true, dataType = "string", paramType = "body") 
 		  )
-
-	   @ApiModelProperty(value = "pet status in the store",dataType="Object",name="123",access="1")
-	   public String putfile( String jsonData) throws DocApplicationException;
+	   public String putfile(String jsonData) throws DocApplicationException;
+	   
+	   /*
+	   @POST
+	   @Path("/putfile12")
+	   @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	   @ApiOperation(value = "", notes = "產生上傳檔案前呼叫，產生檔案名稱", response = docAPIImp.class)
+	   @ApiResponses(value =  @ApiResponse(code = 200, message = "Successful response"))
+	   @ApiImplicitParams(
+		   @ApiImplicitParam(name = "body", value = "JSONObject", required = true, dataType = "com.e104.restapi.docAPI.", paramType = "body") 
+		  )
+	   public String putfile12( @ApiParam(value = "Hash of the user", required = true) @QueryParam("jsonData") com.e104.restapi.model.jsonData jsonData) throws DocApplicationException;
+	   */
+	   
+	   @POST
+	   @Path("/putfile12")
+	   @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	   @ApiOperation(value = "", notes = "產生上傳檔案前呼叫，產生檔案名稱", response = docAPIImp.class)
+	   @ApiResponses(value =  @ApiResponse(code = 200, message = "Successful response"))
+	   @ApiImplicitParams(
+		   @ApiImplicitParam(name = "body", value = "JSONObject", required = true, dataType = "com.e104.restapi.docAPI.", paramType = "body") 
+		  )
+	   public String putfile12( @ApiParam(value = "Hash of the user", required = true) com.e104.restapi.model.jsonData jsonData) throws DocApplicationException;
+	   
 	   
 	   @DELETE
 	   @Path("/removeKey")

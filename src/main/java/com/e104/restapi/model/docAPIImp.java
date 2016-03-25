@@ -20,6 +20,7 @@ import javassist.bytecode.analysis.ControlFlow.Catcher;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.annotation.XmlElement;
 
 import org.apache.logging.log4j.*;
 import org.apache.commons.codec.binary.Base64;
@@ -36,6 +37,7 @@ import com.e104.restapi.model.ImageProcess;
 import com.e104.restapi.model.docAPIImp;
 import com.e104.ErrorHandling.DocApplicationException;
 import com.e104.restapi.docAPI;
+import com.e104.util.Config;
 import com.e104.util.ContentType;
 import com.e104.util.DynamoService;
 import com.e104.util.tools;
@@ -430,7 +432,6 @@ public class docAPIImp implements docAPI{
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 	@Override
 	public String putfile(String jsonData) throws DocApplicationException{
 		
@@ -1257,7 +1258,7 @@ public class docAPIImp implements docAPI{
 			String policy_document =
 				      "{\"expiration\": \"2017-01-01T00:00:00Z\"," +
 				        "\"conditions\": [" +
-				          "{\"bucket\": \""+bucketName+"\"}," +
+				          "{\"bucket\": \""+Config.bucketName+"\"}," +
 				          "[\"starts-with\", \"$key\", \""+filepath_forS3+"\"]," +
 				          "{\"acl\": \"public-read\"}," +
 				          //"{\"Content-Disposition\": \""+ fileName +"\"},"+
@@ -1287,7 +1288,7 @@ public class docAPIImp implements docAPI{
 				returnObject.put("policy_document", policy);
 				returnObject.put("signature", signature);
 				returnObject.put("objectKey", filepath_forS3);
-				returnObject.put("bucketName", bucketName);
+				returnObject.put("bucketName", Config.bucketName);
 				returnObject.put("Content_Disposition", fileName);
 			
 			} catch (InvalidKeyException | UnsupportedEncodingException |
@@ -1297,5 +1298,12 @@ public class docAPIImp implements docAPI{
 				throw new DocApplicationException(e,11);
 			}
 			return returnObject.toString();
+		}
+
+		@Override
+		public String putfile12(jsonData jsonData)
+				throws DocApplicationException {
+			// TODO Auto-generated method stub
+			return null;
 		}	
 }

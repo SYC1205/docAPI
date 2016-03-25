@@ -54,7 +54,7 @@
         
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-	<filter>
+	<!-- <filter>
 	    <filter-name>ApiOriginFilter</filter-name>
 	    <filter-class>com.e104.restapi.ApiOriginFilter</filter-class>
 	  </filter>
@@ -62,6 +62,7 @@
 	    <filter-name>ApiOriginFilter</filter-name>
 	    <url-pattern>/*</url-pattern>
 	  </filter-mapping>
+	   -->
     <servlet-mapping>
         <servlet-name>CXFNonSpringJaxrsServlet</servlet-name>
         <url-pattern>/rest/*</url-pattern>
