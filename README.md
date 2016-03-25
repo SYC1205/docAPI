@@ -7,4 +7,10 @@ Document API
 
 ### How to start
 1. Installing Gradle[https://docs.gradle.org/current/userguide/installation.html]
-2. In project floder run <code>gradle war<code>
+2. In project floder run <code>mvn install<code>
+
+
+### Use google code style and PMD code analysis tool 
+1. Auto gen /target/checkstyle-result.xml
+2. Auto gen /target/site/pmd.html
+ 
