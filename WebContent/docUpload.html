@@ -6,40 +6,7 @@
 
 </head>
 <body>
-<input type="radio" name="ctype" value="image/jpeg">Image
-<input type="radio" name="ctype" value="video/mpg">Video
-<input type="radio" name="ctype" value="application/msword">doc
 
-<!-- mongoDb data check -->
-apnum<input type="text" id="apNum" value="10400">
-pid<input type="text" id="pid" value="10400"/>
-isP<input type="text" id="isP" value="1"/>
-extra<input type="text" id="extra" value="{ectraNo:6ee88242-33cd-4b8f-8347-6d45650ca987}"/>
-
-
-
-<!-- <button value="" onclick="encode()">ENCODE</button><br> -->
-
-<form action="http://e104-filetemp.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
-key<input type="text" id="key" name="key" value="" />
-<input type="hidden" id ="content-type" name="content-type" value="" /><br>
-acl<input type="text" id="acl" name="acl" value="public-read" />
-Content-Disposition<input type="text" id="Content-Disposition" name="Content-Disposition" value="github.jpg" />
-
-
-
-
-<!--<input type="text" name="x-amz-meta-uuid" value="14365123651274" />
-<input type="text" name="x-amz-meta-tag" value="" />-->
-<input type="hidden" id="AWSAccessKeyId" name="AWSAccessKeyId" value="AKIAJXGZ6BOIVQHUNNAQ" />
-<input type="hidden" id="policy" name="policy" value="eyJleHBpcmF0aW9uIjogIjIwMTctMDEtMDFUMDA6MDA6MDBaIiwiY29uZGl0aW9ucyI6IFt7ImJ1Y2tldCI6ICJlMTA0LWZpbGV0ZW1wIn0sWyJzdGFydHMtd2l0aCIsICIka2V5IiwgImZpbGV0ZW1wLzNkNzBhYTkyNDFmYTRhZDU4MWNkMWNlMmM1YjQ2ODgwLmpwZyJdLHsiYWNsIjogInB1YmxpYy1yZWFkIn0seyJDb250ZW50LURpc3Bvc2l0aW9uIjogImdpdGh1Yi5qcGcifSx7ImFjbCI6ICJwdWJsaWMtcmVhZCJ9LFsic3RhcnRzLXdpdGgiLCAiJENvbnRlbnQtVHlwZSIsICJpbWFnZS9qcGVnIl1dfQ==" />
-<input type="hidden" id="signature" name="signature" value="xOigmmoBofPqLyFRCCXIr61qIuA=" />
-
-
-<input id="image_file" name="file" type="file" /><br>
-
-<input name="submit" value="Upload" type="submit" />
-</form>
 </body>
 <script>
 
@@ -65,7 +32,8 @@ function encode(){
 				
 	var output = btoa(unescape(encodeURIComponent(parme)));
 	console.log(output);
-	$.get("http://localhost:8080/cxfServer/services/example/signatureByExtraNo/"+output, function(result){
+	alert("1");
+	$.get("http://localhost:8080/docAPI/rest/signatureByExtraNo/"+output, function(result){
 		
 		//var data = $.parseJSON(result);
 		console.log(result);

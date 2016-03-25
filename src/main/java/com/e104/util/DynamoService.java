@@ -63,6 +63,19 @@ public class DynamoService {
 		return userData;
 	}
 	
+	public String getUploadByExtraNo(String tableName,String extraNo) throws DocApplicationException{
+		DynamoDB dynamoDB = dynamoinit();
+		String userData=null;
+		try{
+			userData = dynamoDB.getTable(tableName).getItem("extraNo", extraNo).toJSON();
+		
+		}catch(NullPointerException e){
+			e.printStackTrace();
+			throw new DocApplicationException(e,11);
+		}
+		return userData;
+	}
+	
 	public String updateItem(String tableName,String fileId,String key,JSONObject jsonObj) throws DocApplicationException{
 		DynamoDB dynamoDB = dynamoinit();
 		String userData=null;
@@ -91,7 +104,7 @@ public String getItems(String tableName,JSONArray fileIds){
 	JSONArray userData = new JSONArray();
 	
 	
-	for (int i=1;i<fileIds.length();i++){
+	for (int i=0;i<fileIds.length();i++){
 		try {
 			//System.out.println(getItem(tableName,fileIds.getJSONObject(i).getString("fileId")));
 			userData.put(new JSONObject(getItem(tableName,fileIds.getJSONObject(i).getString("fileId"))));

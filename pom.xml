@@ -13,6 +13,7 @@
  	<!-- build -->
  	<build>
 	    <finalName>docAPI</finalName>
+	    
 	    <plugins>
 
 	    	<!-- Code style fix -->
@@ -63,7 +64,7 @@
 		          <apiSources>
 		            <apiSource>
 		              <locations>com.e104.restapi.docAPI</locations>
-		              <basePath>/rest</basePath>
+		              <basePath>/docAPI</basePath>
 		              <info>
 		                <title>Swagger Maven Plugin Sample</title>
 		                <version>v1</version>
@@ -94,6 +95,7 @@
 		        </executions>
 			</plugin>
 		</plugins>
+		
  	</build>
  	
  	<reporting>
@@ -201,6 +203,8 @@
 			<artifactId>scala-reflect</artifactId>
 			<version>2.11.8</version>
 		</dependency>
+		
+	
 		
 		
 	    
